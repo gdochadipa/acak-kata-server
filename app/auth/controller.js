@@ -3,6 +3,8 @@ const crypto = require('crypto');
 const path = require('path')
 const fs = require('fs')
 const config = require('../../config')
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 function generateString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -92,5 +94,46 @@ module.exports = {
             next(error);
         }
 
-        }
+    },
+
+    signin: async (req, res, next) => {
+        const { email, password } = req.body
+
+        Users.findOne({ email: email }).then((user) => {
+            
+            if (user){
+                const checkPassword = bcrypt.compareSync(password, user.password)
+                if (checkPassword) {
+                    const token = jwt.sign({
+                        user:{
+                            id :user.id,
+                            username:user.username,
+                            email:user.email,
+                            name:user.name,
+                            avatar: user.avatar,
+                            user_code:user.user_code
+                        }
+                    }, config.jwtKey)
+
+                    res.status(200).json({
+                        data:{token}
+                    })
+                } else {
+                    res.status(403).json({
+                        message: 'email atau password yang anda masukan salah'
+                    })
+                }
+            }else{
+                res.status(403).json({
+                    message:'email yang anda masukan belum terdaftar'
+                })
+            }
+        }).catch((err) => {
+            res.status(500).json({
+                message:err.message || 'Internal server error'
+            });
+            next()
+        });
+        
+    }
 }
