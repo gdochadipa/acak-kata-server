@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>
+        <%= room_code %>
+    </title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+
+<body>
+    <h1>
+        <%= room_code %>
+    </h1>
+    <p>Waiting Room <%= room_code %>
+        <ul id="messages"></ul>
+    </p>
+</body>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    var messages = document.getElementById('messages');
+    var socket = io.connect();
+    socket.on('waiting-room',room =>{
+        console.log("message: " + room);
+        messages.appendChild(room);
+    })
+
+</script>
+
+</html>

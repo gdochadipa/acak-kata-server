@@ -8,7 +8,7 @@ var app = require('../app');
 var debug = require('debug')('api-acakkata:server');
 var http = require('http');
 const db = require('../db');
-let socketapi = require("../socketio");
+let {socketapi, rooms} = require("../socketio");
 
 /**
  * Get port from environment and store in Express.
