@@ -14,31 +14,31 @@ function makeid(length) {
 
 module.exports={
     index:async(req,res)=>{
-        try {
-            res.render('index', { title: 'Express' });
-            // socket.io.on("connection", function (socket) {
-            //     socket.on('clientData', msg => {
-            //         console.log(msg);
-            //     });
-            // });
-            
-            
-        } catch (error) {
-            console.log(error);
-        }
+        // try {
+        //     var data = await RoomSocket.find();
+        //     data.forEach((room, key)=>{
+        //         console.log('Index: ' + key + ' Value: ' +  room);
+        //     })
+        //     res.render('index', { title: 'Express', rooms: data });
+        // } catch (error) {
+        //     console.log(error);
+        // }
     },
     createdRoom:async(req, res)=>{
-        try {
-            console.log(req.body.room);
-            roomID = makeid(5);
+        // try {
+        //     console.log(req.body.room);
+        //     roomID = makeid(5);
+        //     let room = await RoomSocket({ channel_code: req.body.room, language_code: "b-indo" });
+        //     await room.save();
+        //     // var data = await RoomSocket.find();
+
             
-            
-            res.render('waiting_room', { room_code: roomID, language_name:"b-indo" });
-        } catch (error) {
-            console.log('===============socket===================');
-            console.log(error);
-            console.log('================socket==================');
-        }
+        //     // res.render('index', { title: 'Express', rooms: data });
+        // } catch (error) {
+        //     console.log('===============socket===================');
+        //     console.log(error);
+        //     console.log('================socket==================');
+        // }
     },
     waitingRoom:async(req, res)=>{
         try {
@@ -71,6 +71,13 @@ module.exports={
 
         } catch (error) {
 
+        }
+    },
+    playRoom: async(req, res) =>{
+        try {
+            
+        } catch (error) {
+            
         }
     }
 }

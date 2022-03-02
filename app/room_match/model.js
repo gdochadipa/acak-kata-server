@@ -45,4 +45,4 @@ roomSchema.path('room_code').validate(async function (value) {
     }
 
 }, attr => `${attr.value} sudah terdaftar`);
-module.exports = mongoose.model('room_matches')
+module.exports = mongoose.model('room_matches',roomSchema)

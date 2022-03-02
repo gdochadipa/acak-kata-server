@@ -7,11 +7,18 @@
   <body>
     <h1><%= title %></h1>
     <p>Welcome to <%= title %></p>
-    <ul id="messages"></ul>
-    <form action="/create-room" method="POST">
+    <div id="room-container">
+      <% rooms.forEach((room, key) => { %>
+        <div>
+          <%= room.channel_code %>
+        </div>
+        <a href="/play-room/<%= room.channel_code %>">Join</a>
+        <% }) %>
+    </div>
+    <!-- <form action="/create-room" method="POST">
       <input name="room" type="text" required>
       <button type="submit">New Room</button>
-    </form>
+    </form> -->
   </body>
   <script src="/socket.io/socket.io.js"></script>
   <script>

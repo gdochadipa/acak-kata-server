@@ -17,5 +17,5 @@ let roomDetailSchema = mongoose.Schema({
 
 });
 
-module.exports = mongoose.model('room_match_detail');
+module.exports = mongoose.model('room_match_detail',roomDetailSchema);
 

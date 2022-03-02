@@ -45,18 +45,12 @@ socketapi.io.on("connection", function (socket) {
     });
 
     socket.on('disconnect-room', (channel_code, language_name, player_id )=>{
-        socket.to(room).broadcast.emit('user-disconnected', rooms[language_name][channel_code][socket.id]);
+        socket.to(channel_code).broadcast.emit('user-disconnected', player_id);
         deleteUserFromRoom(channel_code, language_name, player_id)
     })  
    
 });
 
-function getUserRooms(channel_code, language_name,socket ) {
-    return Object.entries(rooms).reduce((names, [name, room]) => {
-        if (room[language_name][channel_code][socket.id] != null) names.push(name)
-        return names
-    }, [])
-}
 
 
 

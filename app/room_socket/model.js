@@ -16,4 +16,4 @@ let roomSocketSchema = mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('room_socket');
+module.exports = mongoose.model('room_socket',roomSocketSchema);

@@ -13,7 +13,12 @@
         <%= room_code %>
     </h1>
     <p>Waiting Room <%= room_code %>
-        <ul id="messages"></ul>
+        <ul id="messages">
+            <li>
+                <div id="room"></div>
+                <a id="link" href=""></a>
+            </li>
+        </ul>
     </p>
 </body>
 <script src="/socket.io/socket.io.js"></script>
@@ -21,8 +26,15 @@
     var messages = document.getElementById('messages');
     var socket = io.connect();
     socket.on('waiting-room',room =>{
+        
+        const roomElement = document.getElementById('room');
+        roomElement.innerText = room;
+        const linkElement = document.getElementById('link');
+        linkElement.href = '/play-room/' + room;
+        linkElement.innerText = 'Play Room';
+        messages.appendChild(roomElement);
+        messages.appendChild(linkElement);
         console.log("message: " + room);
-        messages.appendChild(room);
     })
 
 </script>
