@@ -8,6 +8,9 @@ var logger = require('morgan');
 
 var categoryRouter = require('./app/category/router');
 const authRouter = require('./app/auth/router');
+const userRouter = require('./app/user/router');
+const roomRouter = require('./app/room_match/router');
+const { url } = require('inspector');
 
 var app = express();
 const URL = `/api/v1`;
@@ -39,6 +42,8 @@ app.use('/', categoryRouter);
 //api 
 
 app.use(`${URL}/auth`,authRouter);
+app.use(`${URL}/user`, userRouter);
+app.use(`${URL}/room`, roomRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

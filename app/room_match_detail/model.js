@@ -6,11 +6,11 @@ let roomDetailSchema = mongoose.Schema({
         ref: 'Users'
     },
     is_host: {
-        type: Int32Array,
+        type: Number,
         default: 0
     },
     score: {
-        type: Int32Array,
+        type: Number,
         default: 0
     },
 

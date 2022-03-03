@@ -11,7 +11,7 @@ let roomSchema = mongoose.Schema({
         require: [true, 'Kode Channel harus dibuat'],
     },
     status_game: {
-        type: Int32Array,
+        type: Number,
         default: 1
     },
     time_start: {
@@ -19,10 +19,10 @@ let roomSchema = mongoose.Schema({
         require: [false]
     },
     time_match: {
-        type: Int32Array
+        type: Number
     },
     max_player: {
-        type: Int32Array,
+        type: Number,
         default: 2
     },
     room_match_detail: [{
