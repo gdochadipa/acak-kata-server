@@ -37,7 +37,7 @@ module.exports = {
      * 
      * 
      * nanti pada client setelah ngejalanin fungsi method ini pada client, 
-     * dari client wajib ngirim 
+    * dari client wajib ngirim emit ke search-room untuk daftar 
      */
     createRoom: async (req, res, next) => {
         try {
@@ -48,7 +48,8 @@ module.exports = {
             let roomMatchDetail = new RoomMatchDetail({
                 player_id: req.user._id,
                 is_host: 1,
-                score:0
+                score:0,
+                is_ready:false
             })
 
             await roomMatchDetail.save();
@@ -77,27 +78,8 @@ module.exports = {
                 });
 
             // socketapi.io.emit("test", channel_code, language.language_code, req.user._id);
-            res.status(200).json({ data: result });
+            res.status(200).json({ data: result, status: true });
 
-
-            // const words;
-            // switch (language.language_collection) {
-            //     case 'indonesia_words': 
-            //         words = await LanguageWords.IndonesiaWords.find().limit(200)
-            //         break;
-            //     case 'jawa_words':
-            //         words = await LanguageWords.JawaWords.find().limit(200)
-            //         break;
-            //     case 'bali_words':
-            //         words = await LanguageWords.BaliWords.find().limit(200)
-            //         break;
-            //     case 'english_words':
-            //         words = await LanguageWords.EnglishWords.find().limit(200)
-            //         break;
-            //     default:
-            //         words = await LanguageWords.EnglishWords.find().limit(200)
-            //         break;
-            // }
             
         } catch (err) {
             res.status(500).json({ message: err.message || `Internal server error` })
@@ -120,9 +102,104 @@ module.exports = {
      * @param {*} req 
      * @param {*} res 
      * @param {*} next 
+     * 
+     * 
+     * * parameter  
+     * language_id
+     * time_watch
+     * room_code
+     * 
+     * 
+     * nanti pada client setelah ngejalanin fungsi method ini pada client, 
+    * dari client wajib ngirim emit ke search-room untuk daftar 
      */
     searchingRoomWithCode: async (req, res, next) =>{
+        try {
+            let roomMatch = await RoomMatch.findOne({ room_code: req.body.room_code })
+            .populate({
+                path: 'room_match_detail'
+            });
 
+            if (!roomMatch) {
+                throw new Error("Room tidak ditemukan");
+            }
+
+            if (roomMatch.room_match_detail.length >= roomMatch.max_player ){
+                throw new Error("Room sudah penuh");
+            }
+
+            let newRoom = [];
+            newRoom.push(roomMatch.room_match_detail[0]._id);
+
+            let roomDetail = new RoomMatchDetail({
+                player_id: req.user._id, 
+                is_host:0, 
+                score:0,
+                is_ready: false
+            }
+            )
+            await roomDetail.save()
+
+            newRoom.push(roomDetail._id);
+
+            await RoomMatch.findOneAndUpdate(
+                { _id: roomMatch._id },
+                { room_match_detail: newRoom }
+            );
+
+            let data = await RoomMatch.find({ _id: roomMatch._id }).populate({
+                path: 'room_match_detail',
+                populate: {
+                    path: 'player_id'
+                }
+            })
+
+
+            res.status(200).json({ data: data, status: true });
+
+        } catch (err) {
+            res.status(500).json({ message: err.message || `Internal server error`  })
+        }
+    },
+
+    /**
+     * 
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     * 
+     * input 
+     * room_code
+     * 
+     */
+    confirmGame: async (req, res, next) => {
+        try {
+            let result = await RoomMatch.findOne({ room_code:req.body.room_code })
+                .populate({
+                    path: 'room_match_detail'
+                });
+
+            let confirmDataPlayer = result.room_match_detail.filter((e) =>{
+                return String(e.player_id) == String(req.user._id);
+            });
+            // console.log(req.user._id);
+            // console.log(result.room_match_detail);
+            // console.log(confirmDataPlayer);
+
+            if(confirmDataPlayer == null || confirmDataPlayer.length < 1){
+                throw new Error("Pemain tidak ditemukan di room");
+            }
+
+            let room = await RoomMatchDetail.findOneAndUpdate({ _id: confirmDataPlayer[0]._id }, { is_ready: true})
+
+            if (!room){
+                throw new Error("Gagal update confirm game");
+            }
+            res.status(200).json({message:"success confirm game", status:true})
+
+        } catch (err) {
+            res.status(500).json({ message: err.message || `Internal server error` })
+        }
     },
 
     /**
@@ -131,31 +208,141 @@ module.exports = {
      * @param {*} res 
      * @param {*} next 
      */
-    confirmGame: async (req, res, next) => {},
+    cancelGameFromRoom: async(req, res, next) => {
+        try {
+            let result = await RoomMatch.findOne({ room_code: req.body.room_code })
+                .populate({
+                    path: 'room_match_detail'
+                });
+
+            if (result.room_match_detail.length < result.max_player && result.room_match_detail.length == 1) {
+                throw new Error("Pemain kurang dari maksimal player");
+                //kayaknya hapus room_match karena engga ada player di room
+            }
+
+            let confirmDataPlayer = result.room_match_detail.filter((e) => {
+                return e.player_id == req.user._id ? e : null
+            });
+
+
+            if (confirmDataPlayer == null) {
+                throw new Error("Pemain tidak ditemukan di room");
+            }
+            let roomDetailArr = result.room_match_detail;
+            roomDetailArr.splice(roomDetailArr.findIndex(v => v._id == confirmDataPlayer._id),1);
+
+
+            await RoomMatchDetail.findOneAndDelete({ _id: confirmDataPlayer._id })
+            res.status(200).json({ message: "success cancel", status: true })
+
+        } catch (err) {
+            res.status(500).json({ message: err.message || `Internal server error` })
+        }
+    },
 
     /**
      * 
      * @param {*} req 
      * @param {*} res 
      * @param {*} next 
+     * 
+     * input
+     * language_id => id
+     * question_num => int
      */
-    cancelGameFromRoom: async(req, res, next) => {},
+    getPackageQuestion: async (req, res, next) => {
+        try {
+            const language = await Language.findById(req.body.language_id);
+            const limit = req.body.question_num ?? 10;
+            let words;
+            switch (language.language_collection) {
+                case 'indonesia_words': 
+                    var count = await LanguageWords.IndonesiaWords.count();
+                    var rand = Math.floor(Math.random() * count);
+                    words = await LanguageWords.IndonesiaWords.find().limit(limit).skip(rand)
+                    break;
+
+                case 'jawa_words':
+                    var count = await LanguageWords.JawaWords.count();
+                    var rand = Math.floor(Math.random() * count);
+                    words = await LanguageWords.JawaWords.find().limit(limit).skip(rand)
+                    break;
+
+                case 'bali_words':
+                    var count = await LanguageWords.BaliWords.count();
+                    var rand = Math.floor(Math.random() * count);
+                    words = await LanguageWords.BaliWords.find().limit(limit).skip(rand)
+                    break;
+
+                case 'english_words':
+                    var count = await LanguageWords.BaliWords.count();
+                    var rand = Math.floor(Math.random() * count);
+                    words = await LanguageWords.EnglishWords.find().limit(limit).skip(rand)
+                    break;
+
+                default:
+                    var count = await LanguageWords.BaliWords.count();
+                    var rand = Math.floor(Math.random() * count);
+                    words = await LanguageWords.EnglishWords.find().limit(limit).skip(rand)
+                    break;
+            }
+
+            res.status(200).json({data:words, status:true})
+        } catch (err) {
+            res.status(500).json({ message: err.message || `Internal server error`, status: true})
+        }
+    },
 
     /**
      * 
      * @param {*} req 
      * @param {*} res 
      * @param {*} next 
+     * 
+     * input:
+     * room_match_detail => id
+     * score => int
+     * 
      */
-    getPackageQuestion: async (req, res, next) => {},
+    saveScoreMatch: async (req, res, next) => {
+        try {
+            await RoomMatchDetail.findOneAndUpdate({ _id: req.body.room_march_detail_id},{score:req.body.score});
+
+            res.status(200).json({status: true })
+
+        } catch (err) {
+            res.status(500).json({ message: err.message || `Internal server error`, status: false })
+        }
+    },
 
     /**
      * 
      * @param {*} req 
      * @param {*} res 
      * @param {*} next 
+     * 
+     * input:
+     * room_match_id => id
+     * 
      */
-    sendAllAnswerSendToServer: async (req, res, next) => {},
+    getResultMatch: async(req, res, next) =>{
+        try {
+            let result = await RoomMatch.findOne({ _id: req.body.room_march_detail_id})
+                .populate({
+                    path: 'room_match_detail',
+                    populate: {
+                        path: 'player_id'
+                    }
+                }).populate({
+                    path: 'language'
+                });
+
+            res.status(200).json({data:result , status: true })
+
+        } catch (err) {
+            res.status(500).json({ message: err.message || `Internal server error`, status: false })
+        }
+    }
 
     
 }

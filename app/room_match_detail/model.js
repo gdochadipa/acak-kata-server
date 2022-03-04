@@ -13,6 +13,10 @@ let roomDetailSchema = mongoose.Schema({
         type: Number,
         default: 0
     },
+    is_ready:{
+        type:Boolean,
+        default: false
+    }
 
 
 });

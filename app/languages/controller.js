@@ -6,11 +6,12 @@ module.exports={
             const languages = language.find();
 
             res.status(200).json({
-                data:languages
+                data:languages, status:true
             })
         } catch (err) {
             res.status(500).json({
-                message: err.message || `Internal server error`
+                message: err.message || `Internal server error`,
+                status: false
             })
 
             next()

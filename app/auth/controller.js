@@ -50,7 +50,8 @@ module.exports = {
                     delete user._doc.password;
 
                     res.status(201).json({
-                        data: user
+                        data: user,
+                        status: true
                     });
 
                 } catch (error) {
@@ -58,7 +59,8 @@ module.exports = {
                         return res.status(422).json({
                             error: 1,
                             message: err.message,
-                            fields: err.errors
+                            fields: err.errors,
+                            status: false
                         })
                     }
                     next(err)
@@ -80,7 +82,8 @@ module.exports = {
                delete user._doc.password;
 
                res.status(201).json({
-                   data: user
+                   data: user,
+                   status: true
                });
            }
 
@@ -88,7 +91,8 @@ module.exports = {
             if(error && error.name === "ValidationError"){
                 return res.status(422).json({
                     message:error.message,
-                    fields:error.errors
+                    fields:error.errors,
+                    status: false
                 });
             }
             next(error);
