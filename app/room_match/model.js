@@ -18,6 +18,9 @@ let roomSchema = mongoose.Schema({
         type: Date,
         require: [false]
     },
+    total_question:{
+        type:Number
+    },
     time_match: {
         type: Number
     },

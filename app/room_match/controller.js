@@ -42,6 +42,8 @@ module.exports = {
     createRoom: async (req, res, next) => {
         try {
             const language = await Language.findById(req.body.language_id);
+            const maxPlayer = req.body.max_player;
+            const totalQuestion = req.body.total_question;
             const roomCode = stringGenerate(7);
             const channel_code = stringGenerate(12);
             const now = moment().tz("Asia/Makassar").format();
@@ -49,7 +51,8 @@ module.exports = {
                 player_id: req.user._id,
                 is_host: 1,
                 score:0,
-                is_ready:false
+                is_ready:0,
+                status_player:1
             })
 
             await roomMatchDetail.save();
@@ -60,7 +63,8 @@ module.exports = {
                 status_game:0,
                 time_start: now,
                 time_match:req.body.time_match,
-                max_player:2,
+                total_question: totalQuestion,
+                max_player: maxPlayer,
                 room_match_detail:[
                     roomMatchDetail._id
                 ],
@@ -68,6 +72,8 @@ module.exports = {
             });
 
             await roomMatch.save();
+
+            await RoomMatchDetail.findOneAndUpdate({_id:roomMatchDetail},{room_id:roomMatch._id});
 
             let result = await RoomMatch.findOne({ _id: roomMatch._id})
                 .populate({
@@ -133,11 +139,13 @@ module.exports = {
 
             let roomDetail = new RoomMatchDetail({
                 player_id: req.user._id, 
+                room_id: roomMatch._id,
                 is_host:0, 
                 score:0,
-                is_ready: false
-            }
-            )
+                is_ready: 0,
+                status_player:1
+            });
+            
             await roomDetail.save()
 
             newRoom.push(roomDetail._id);
@@ -169,12 +177,14 @@ module.exports = {
      * @param {*} next 
      * 
      * input 
-     * room_code
+     * _id
+     * 
+     * emmit di client flutter
      * 
      */
     confirmGame: async (req, res, next) => {
         try {
-            let result = await RoomMatch.findOne({ room_code:req.body.room_code })
+            let result = await RoomMatch.findOne({ _id:req.body.room_id })
                 .populate({
                     path: 'room_match_detail'
                 });
@@ -190,7 +200,7 @@ module.exports = {
                 throw new Error("Pemain tidak ditemukan di room");
             }
 
-            let room = await RoomMatchDetail.findOneAndUpdate({ _id: confirmDataPlayer[0]._id }, { is_ready: true})
+            let room = await RoomMatchDetail.findOneAndUpdate({ _id: confirmDataPlayer[0]._id }, { is_ready: 1})
 
             if (!room){
                 throw new Error("Gagal update confirm game");
@@ -207,10 +217,14 @@ module.exports = {
      * @param {*} req 
      * @param {*} res 
      * @param {*} next 
+     * 
+     * input 
+     * room_id
+     * 
      */
     cancelGameFromRoom: async(req, res, next) => {
         try {
-            let result = await RoomMatch.findOne({ room_code: req.body.room_code })
+            let result = await RoomMatch.findOne({ _id: req.body.room_id })
                 .populate({
                     path: 'room_match_detail'
                 });
@@ -342,7 +356,9 @@ module.exports = {
         } catch (err) {
             res.status(500).json({ message: err.message || `Internal server error`, status: false })
         }
-    }
+    },
+
+    
 
     
 }

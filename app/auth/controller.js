@@ -49,8 +49,20 @@ module.exports = {
                     await user.save();
                     delete user._doc.password;
 
+                    const token = jwt.sign({
+                        user: {
+                            id: user.id,
+                            username: user.username,
+                            email: user.email,
+                            name: user.name,
+                            avatar: user.avatar,
+                            user_code: user.user_code
+                        }
+                    }, config.jwtKey);
+
                     res.status(201).json({
                         data: user,
+                        token: token,
                         status: true
                     });
 
@@ -81,8 +93,20 @@ module.exports = {
                await user.save();
                delete user._doc.password;
 
+               const token = jwt.sign({
+                   user: {
+                       id: user.id,
+                       username: user.username,
+                       email: user.email,
+                       name: user.name,
+                       avatar: user.avatar,
+                       user_code: user.user_code
+                   }
+               }, config.jwtKey);
+
                res.status(201).json({
                    data: user,
+                   token: token,
                    status: true
                });
            }

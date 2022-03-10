@@ -5,6 +5,10 @@ let roomDetailSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Users'
     },
+    room_id:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'room_matches'
+    },
     is_host: {
         type: Number,
         default: 0
@@ -13,13 +17,22 @@ let roomDetailSchema = mongoose.Schema({
         type: Number,
         default: 0
     },
+    /**
+     * 0 is not ready
+     * 1 is ready but not receive question
+     * 2 is receive question
+     */
     is_ready:{
-        type:Boolean,
-        default: false
+        type:Number,
+        default: 0
+    },
+    status_player:{
+        type:Number,
+        default:0
     }
 
 
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('room_match_detail',roomDetailSchema);
 
