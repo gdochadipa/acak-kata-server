@@ -34,7 +34,7 @@ let addUserToRooms = async (channel_code, language_name, player_id, socket_id) =
     await RoomSocket.findOneAndUpdate(
         filter,
         doc,
-        {upsert:true,new:true,runValidators});
+        {upsert:true,new:true});
     // console.log(`socket search-room ${channel_code}`);
 }
 
@@ -76,18 +76,24 @@ let setPlayerReceiveQuestion = async(room_detail_id) =>{
  * 
  */
 socketapi.io.on("connection", function (socket) {
-    console.log('a user connected');
+    console.log('a user connected '+socket.id);
 
-    socket.on('search-room',(data )=>{
+    socket.on('search-room',(data)=>{
         try {
             socket.join(data['channel_code']);
+            
             console.log(`socket search-room ${data['channel_code']}`);
-            addUserToRooms(data['channel_code'], data['language_code'], data['language_code'], socket.id);
+            // addUserToRooms(data['channel_code'], data['language_code'], data['language_code'], socket.id);
             // rooms[language_name][channel_code][socket.id] = player_name;
-            socket.to(data['channel_code']).emit('connect-to-room', data['player_id'])
+            // socket.to(data['channel_code']).emit('connect-to-room', data['player_id']);
+            socket.emit('connect-to-room', data['player_id'])
         } catch (error) {
             console.log(error);
         }
+    });
+
+    socket.on("connect-to-room", function (data) {
+        console.log(data+" on server");
     });
 
     /**
@@ -102,6 +108,10 @@ socketapi.io.on("connection", function (socket) {
             socket.to(data['channel_code']).emit('broadcast-question', { question: data['question'], language_name: data['language_code'], player_id: data['player_id'], status: false });
         }
 
+    });
+
+    socket.on('test',(data)=>{
+        console.log(data);
     });
 
     /**

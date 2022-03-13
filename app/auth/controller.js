@@ -144,7 +144,15 @@ module.exports = {
                     }, config.jwtKey)
 
                     res.status(200).json({
-                        data:{token}
+                        data: {
+                            id: user.id,
+                            username: user.username,
+                            email: user.email,
+                            name: user.name,
+                            avatar: user.avatar,
+                            user_code: user.user_code
+                        },
+                        token:token
                     })
                 } else {
                     res.status(403).json({

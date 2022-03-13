@@ -127,11 +127,11 @@ module.exports = {
             });
 
             if (!roomMatch) {
-                throw new Error("Room tidak ditemukan");
+                res.status(403).json({message:"Room tidak ditemukan"})
             }
 
             if (roomMatch.room_match_detail.length >= roomMatch.max_player ){
-                throw new Error("Room sudah penuh");
+                res.status(403).json({ message: "Room sudah penuh" })
             }
 
             let newRoom = [];
@@ -155,7 +155,7 @@ module.exports = {
                 { room_match_detail: newRoom }
             );
 
-            let data = await RoomMatch.find({ _id: roomMatch._id }).populate({
+            let data = await RoomMatch.findOne({ _id: roomMatch._id }).populate({
                 path: 'room_match_detail',
                 populate: {
                     path: 'player_id'
@@ -167,6 +167,31 @@ module.exports = {
 
         } catch (err) {
             res.status(500).json({ message: err.message || `Internal server error`  })
+        }
+    },
+
+    findRoomWithRoomCode:async (req, res, next) =>{
+        try {
+            let roomMatch = await RoomMatch.findOne({ room_code: req.body.room_code })
+                .populate({
+                    path: 'room_match_detail',
+                    populate: {
+                        path: 'player_id'
+                    }
+                });
+
+            if (!roomMatch) {
+                res.status(403).json({ message: "Room tidak ditemukan" })
+            }
+
+            if (roomMatch.room_match_detail.length >= roomMatch.max_player) {
+                res.status(403).json({ message: "Room sudah penuh" })
+            }
+
+            res.status(200).json({ data: roomMatch, status: true });
+
+        } catch (err) {
+            res.status(500).json({ message: err.message || `Internal server error` })
         }
     },
 
