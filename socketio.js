@@ -92,7 +92,7 @@ socketapi.io.on("connection", function (socket) {
         }
     });
 
-    socket.on("connect-to-room", function (data) {
+    socket.on("eventName", function (data) {
         console.log(data+" on server");
     });
 
