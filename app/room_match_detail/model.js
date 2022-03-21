@@ -5,6 +5,10 @@ let roomDetailSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Users'
     },
+    player: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Users'
+    },
     room_id:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'room_matches'

@@ -49,6 +49,7 @@ module.exports = {
             const now = moment().tz("Asia/Makassar").format();
             let roomMatchDetail = new RoomMatchDetail({
                 player_id: req.user._id,
+                player: req.user._id,
                 is_host: 1,
                 score:0,
                 is_ready:0,
@@ -79,7 +80,8 @@ module.exports = {
                 .populate({
                     path: 'room_match_detail',
                     populate:{
-                        path: 'player_id'
+                        path: 'player',
+                        select: '_id email name username role user_code createdAt updatedAt'
                     }
                 });
 
@@ -127,11 +129,11 @@ module.exports = {
             });
 
             if (!roomMatch) {
-                res.status(403).json({message:"Room tidak ditemukan"})
+                return res.status(403).json({message:"Room tidak ditemukan", status:false})
             }
 
             if (roomMatch.room_match_detail.length >= roomMatch.max_player ){
-                res.status(403).json({ message: "Room sudah penuh" })
+                return res.status(403).json({ message: "Room sudah penuh", status: false })
             }
 
             let newRoom = [];
@@ -139,6 +141,7 @@ module.exports = {
 
             let roomDetail = new RoomMatchDetail({
                 player_id: req.user._id, 
+                player: req.user._id, 
                 room_id: roomMatch._id,
                 is_host:0, 
                 score:0,
@@ -155,18 +158,20 @@ module.exports = {
                 { room_match_detail: newRoom }
             );
 
-            let data = await RoomMatch.findOne({ _id: roomMatch._id }).populate({
+            let result = await RoomMatch.findOne({ _id: roomMatch._id }).populate({
                 path: 'room_match_detail',
                 populate: {
-                    path: 'player_id'
+                    path: 'player',
+                    select: '_id email name username role user_code createdAt updatedAt'
                 }
             })
 
 
-            res.status(200).json({ data: data, status: true });
+            res.status(200).json({ data: result, status: true });
+
 
         } catch (err) {
-            res.status(500).json({ message: err.message || `Internal server error`  })
+            res.status(500).json({ message: err.message || `Internal server error` })
         }
     },
 
@@ -176,16 +181,17 @@ module.exports = {
                 .populate({
                     path: 'room_match_detail',
                     populate: {
-                        path: 'player_id'
+                        path: 'player',
+                        select:'_id email name username role user_code createdAt updatedAt'
                     }
                 });
 
             if (!roomMatch) {
-                res.status(403).json({ message: "Room tidak ditemukan" })
+                return res.status(403).json({ message: "Room tidak ditemukan",status:false })
             }
 
             if (roomMatch.room_match_detail.length >= roomMatch.max_player) {
-                res.status(403).json({ message: "Room sudah penuh" })
+                return res.status(403).json({ message: "Room sudah penuh", status: false })
             }
 
             res.status(200).json({ data: roomMatch, status: true });
@@ -314,7 +320,7 @@ module.exports = {
                     break;
 
                 case 'english_words':
-                    var count = await LanguageWords.BaliWords.count();
+                    var count = await LanguageWords.EnglishWords.count();
                     var rand = Math.floor(Math.random() * count);
                     words = await LanguageWords.EnglishWords.find().limit(limit).skip(rand)
                     break;
@@ -370,7 +376,8 @@ module.exports = {
                 .populate({
                     path: 'room_match_detail',
                     populate: {
-                        path: 'player_id'
+                        path: 'player',
+                        select: '_id email name username role user_code createdAt updatedAt'
                     }
                 }).populate({
                     path: 'language'

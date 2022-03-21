@@ -22,7 +22,11 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
-socketapi.io.attach(server);
+socketapi.io.attach(server,{
+  cors:{
+    origin: "*",
+  }
+});
 
 /**
  * Listen on provided port, on all network interfaces.

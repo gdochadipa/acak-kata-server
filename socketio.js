@@ -18,7 +18,7 @@ const rooms = {};
  * connect-to-room => memberi tau kalo ada player yang baru join
  * send-question =>
  */
-let addUserToRooms = async (channel_code, language_name, player_id, socket_id) => {
+let addUserToRooms = async (channel_code, language_name, room_detail, socket_id) => {
     // let room_socket = new RoomSocket({ channel_code, language_name, player_id, socket_id });
     // await room_socket.save();
     var filter = {
@@ -28,7 +28,7 @@ let addUserToRooms = async (channel_code, language_name, player_id, socket_id) =
         channel_code: channel_code,
         language_code: language_name, 
         player_id:[
-            player_id
+            room_detail.player_id._id
         ], 
         socket_id: socket_id }
     await RoomSocket.findOneAndUpdate(
@@ -77,23 +77,30 @@ let setPlayerReceiveQuestion = async(room_detail_id) =>{
  */
 socketapi.io.on("connection", function (socket) {
     console.log('a user connected '+socket.id);
+    
+    // socket.emit('eventName',"{data:data}");
 
     socket.on('search-room',(data)=>{
-        try {
-            socket.join(data['channel_code']);
+        var parse = JSON.parse(data);
+
+        //emit set room => room_detail
+        socket.to(parse.channel_code).emit('set-room', JSON.stringify({ room_detail: parse.room_detail, target: 'update-player'}));
+        addUserToRooms(parse.channel_code, parse.language_code, parse.room_detail, socket.id);
+        // rooms[language_name][channel_code][socket.id] = player_name;
+        // socket.emit('set-room', parse.player_id);
             
-            console.log(`socket search-room ${data['channel_code']}`);
-            // addUserToRooms(data['channel_code'], data['language_code'], data['language_code'], socket.id);
-            // rooms[language_name][channel_code][socket.id] = player_name;
-            // socket.to(data['channel_code']).emit('connect-to-room', data['player_id']);
-            socket.emit('connect-to-room', data['player_id'])
-        } catch (error) {
-            console.log(error);
-        }
+    });
+
+    socket.on('join-room', function (data) {
+        var parse = JSON.parse(data);
+        console.log("join room "+parse.player_id);
+        socket.join(parse.channel_code);
+        socket.to(parse.channel_code).emit('eventName', "on connect");
     });
 
     socket.on("eventName", function (data) {
-        console.log(data+" on server");
+        var parse = JSON.parse(data);
+        socket.to(parse.channel_code).emit('set-room-2', parse.player_id);
     });
 
     /**
@@ -102,12 +109,19 @@ socketapi.io.on("connection", function (socket) {
      * question => json pertanyaan satu soal
      */
     socket.on('send-question', (data)=>{
-        if (checkRoom(data['channel_code'])){
-            socket.to(data['channel_code']).emit('broadcast-question', { question: data['question'], language_name: data['language_code'], player_id: data['player_id'], status: true });
+        var parse = JSON.parse(data);
+        if (checkRoom(parse.channel_code)){
+            socket.to(parse.channel_code).emit('broadcast-question', JSON.stringify({ question: parse.question, language_name: parse.language_code, player_id: parse.player_id, status: true }));
         }else{
-            socket.to(data['channel_code']).emit('broadcast-question', { question: data['question'], language_name: data['language_code'], player_id: data['player_id'], status: false });
+            socket.to(parse.channel_code).emit('broadcast-question', JSON.stringify({ question: parse.question, language_name: parse.language_code, player_id: parse.player_id, status: false }));
         }
 
+    });
+
+    socket.on('status-player', (data) =>{
+        console.log();
+        var parse = JSON.parse(data); 
+        socket.to(parse.channel_code).emit('broadcast-status-player', JSON.stringify({ room_detail_id: parse.room_detail_id, status: parse.is_ready, target: 'update-status' }));
     });
 
     socket.on('test',(data)=>{
@@ -121,16 +135,18 @@ socketapi.io.on("connection", function (socket) {
      */
     socket.on('player-receive-question',(data)=>{
         try {
+            var parse = JSON.parse(data);
             setPlayerReceiveQuestion(data['room_detail_id']);
-            socket.to(data['channel_code']).emit('info-another-receive-question',{channel_code:data['channel_code'], room_id:data['room_id']});
+            socket.to(data.channel_code).emit('info-another-receive-question', { channel_code: parse.channel_code, room_id: parse.room_id});
         } catch (error) {
             console.log(error);
         }
     });
 
     socket.on('disconnect-room', (data)=>{
-        socket.to(data['channel_code']).broadcast.emit('user-disconnected', data['player_id']);
-        deleteUserFromRoom(data['channel_code'], data['language_name'], data['player_id'])
+        var parse = JSON.parse(data);
+        socket.to(parse.channel_code).broadcast.emit('user-disconnected', parse.player_id);
+        deleteUserFromRoom(parse.channel_code, parse.language_name, parse.player_id)
     })  
    
 });
