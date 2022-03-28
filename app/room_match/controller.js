@@ -294,6 +294,7 @@ module.exports = {
      * input
      * language_id => id
      * question_num => int
+     * channel_code => string
      */
     getPackageQuestion: async (req, res, next) => {
         try {
@@ -332,9 +333,11 @@ module.exports = {
                     break;
             }
 
+            socketapi.io.to(req.body.channel_code).emit('broadcast-question', JSON.stringify({ question: words, language_name: language.language_name, status: true }));
+
             res.status(200).json({data:words, status:true})
         } catch (err) {
-            res.status(500).json({ message: err.message || `Internal server error`, status: true})
+            res.status(500).json({ message: err.message || `Internal server error`, status: false})
         }
     },
 
