@@ -18,6 +18,20 @@ var stringGenerate = (length=5, charlist= true)=>{
     return text;
 }
 
+var suffleWords = (words =[])=>{
+    if(words.length > 0){
+        var i = words.length;
+        var k, temp;
+        while (--i > 0) {
+            k = Math.floor(Math.random() * (i+1))
+            temp = words[k]
+            words[k] = words[i];
+            words[i] = temp;
+        }
+    }
+    return words;
+}
+
 module.exports = {
     /**
      * 
@@ -310,39 +324,42 @@ module.exports = {
         try {
             const language = await Language.findById(req.query.language_id);
             const limit = req.query.question_num ?? 10;
-            const length_word = req.query.length_word ?? 3;
+            const length_w = req.query.length_word ?? 3;
             let words;
             switch (language.language_collection) {
                 case 'indonesia_words': 
                     var count = await LanguageWords.IndonesiaWords.count();
                     var rand = Math.floor(Math.random() * count);
-                    words = await LanguageWords.IndonesiaWords.find().where({ length_word: length_word }).limit(limit).skip(rand)
+                    words = await LanguageWords.IndonesiaWords.find({ length_word: length_w });
                     break;
 
                 case 'jawa_words':
                     var count = await LanguageWords.JawaWords.count();
                     var rand = Math.floor(Math.random() * count);
-                    words = await LanguageWords.JawaWords.find().where({ length_word: length_word }).limit(limit).skip(rand)
+                    words = await LanguageWords.JawaWords.find({ length_word: length_w });
                     break;
 
                 case 'bali_words':
                     var count = await LanguageWords.BaliWords.count();
                     var rand = Math.floor(Math.random() * count);
-                    words = await LanguageWords.BaliWords.find().where({ length_word: length_word }).limit(limit).skip(rand)
+                    words = await LanguageWords.BaliWords.find({ length_word: length_w });
                     break;
 
                 case 'english_words':
                     var count = await LanguageWords.EnglishWords.count();
                     var rand = Math.floor(Math.random() * count);
-                    words = await LanguageWords.EnglishWords.find().where({ length_word: length_word }).limit(limit).skip(rand)
+                    words = await LanguageWords.EnglishWords.find({ length_word: length_w });
                     break;
 
                 default:
                     var count = await LanguageWords.BaliWords.count();
                     var rand = Math.floor(Math.random() * count);
-                    words = await LanguageWords.EnglishWords.find().where({ length_word: length_word }).limit(limit).skip(rand)
+                    words = await LanguageWords.EnglishWords.find({ length_word: length_w });
                     break;
             }
+            
+            words = suffleWords(words);
+            words = words.slice(0, limit);
 
             socketapi.io.to(req.query.channel_code).emit('broadcast-question', JSON.stringify({ question: words, language_name: language.language_name, status: true }));
 
