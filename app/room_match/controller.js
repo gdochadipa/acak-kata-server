@@ -3,11 +3,15 @@ var RoomMatch = require('./model')
 var RoomMatchDetail = require('../room_match_detail/model');
 const LanguageWords = require('../language_words/language_words');
 var Language = require('../languages/model');
+var Level = require('../level/model');
 var moment = require('moment-timezone');
 
-var stringGenerate = (length=5)=>{
+var stringGenerate = (length=5, charlist= true)=>{
     var text = "";
     var charList = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    if(!charList){
+        charList = "0123456789";
+    }
     for (let i = 0; i < length; i++) {
         text += charList.charAt(Math.floor(Math.random()*charList.length));
     }
@@ -34,7 +38,9 @@ module.exports = {
      * parameter
      * language_id
      * time_watch
-     * 
+     * datetime_match,
+     * total_question,
+     * max_player
      * 
      * nanti pada client setelah ngejalanin fungsi method ini pada client, 
     * dari client wajib ngirim emit ke search-room untuk daftar 
@@ -44,32 +50,35 @@ module.exports = {
             const language = await Language.findById(req.body.language_id);
             const maxPlayer = req.body.max_player;
             const totalQuestion = req.body.total_question;
-            const roomCode = stringGenerate(7);
+            const roomCode = stringGenerate(8);
             const channel_code = stringGenerate(12);
-            const now = moment().tz("Asia/Makassar").format();
+            const datetime_match = new Date(req.body.datetime_match);
+            const level_id = req.body.level;
+            const now = moment(datetime_match).tz("Asia/Makassar").format("YYYY-MM-DD HH:mm:ss");
             let roomMatchDetail = new RoomMatchDetail({
-                player_id: req.user._id,
-                player: req.user._id,
-                is_host: 1,
-                score:0,
-                is_ready:0,
-                status_player:1
+                player_id    : req.user._id,
+                player       : req.user._id,
+                is_host      : 1,
+                score        : 0,
+                is_ready     : 0,
+                status_player: 1
             })
 
             await roomMatchDetail.save();
 
             let roomMatch = new RoomMatch({
-                room_code:roomCode,
-                channel_code:channel_code,
-                status_game:0,
-                time_start: now,
-                time_match:req.body.time_match,
+                room_code     : roomCode,
+                channel_code  : channel_code,
+                status_game   : 0,
+                datetime_match: now,
+                time_match    : req.body.time_match,
                 total_question: totalQuestion,
-                max_player: maxPlayer,
+                max_player    : maxPlayer,
+                level_id: level_id,
                 room_match_detail:[
                     roomMatchDetail._id
                 ],
-                language:language._id
+                language: language._id
             });
 
             await roomMatch.save();
@@ -295,45 +304,47 @@ module.exports = {
      * language_id => id
      * question_num => int
      * channel_code => string
+     * length_word => int
      */
     getPackageQuestion: async (req, res, next) => {
         try {
-            const language = await Language.findById(req.body.language_id);
-            const limit = req.body.question_num ?? 10;
+            const language = await Language.findById(req.query.language_id);
+            const limit = req.query.question_num ?? 10;
+            const length_word = req.query.length_word ?? 3;
             let words;
             switch (language.language_collection) {
                 case 'indonesia_words': 
                     var count = await LanguageWords.IndonesiaWords.count();
                     var rand = Math.floor(Math.random() * count);
-                    words = await LanguageWords.IndonesiaWords.find().limit(limit).skip(rand)
+                    words = await LanguageWords.IndonesiaWords.find().where({ length_word: length_word }).limit(limit).skip(rand)
                     break;
 
                 case 'jawa_words':
                     var count = await LanguageWords.JawaWords.count();
                     var rand = Math.floor(Math.random() * count);
-                    words = await LanguageWords.JawaWords.find().limit(limit).skip(rand)
+                    words = await LanguageWords.JawaWords.find().where({ length_word: length_word }).limit(limit).skip(rand)
                     break;
 
                 case 'bali_words':
                     var count = await LanguageWords.BaliWords.count();
                     var rand = Math.floor(Math.random() * count);
-                    words = await LanguageWords.BaliWords.find().limit(limit).skip(rand)
+                    words = await LanguageWords.BaliWords.find().where({ length_word: length_word }).limit(limit).skip(rand)
                     break;
 
                 case 'english_words':
                     var count = await LanguageWords.EnglishWords.count();
                     var rand = Math.floor(Math.random() * count);
-                    words = await LanguageWords.EnglishWords.find().limit(limit).skip(rand)
+                    words = await LanguageWords.EnglishWords.find().where({ length_word: length_word }).limit(limit).skip(rand)
                     break;
 
                 default:
                     var count = await LanguageWords.BaliWords.count();
                     var rand = Math.floor(Math.random() * count);
-                    words = await LanguageWords.EnglishWords.find().limit(limit).skip(rand)
+                    words = await LanguageWords.EnglishWords.find().where({ length_word: length_word }).limit(limit).skip(rand)
                     break;
             }
 
-            socketapi.io.to(req.body.channel_code).emit('broadcast-question', JSON.stringify({ question: words, language_name: language.language_name, status: true }));
+            socketapi.io.to(req.query.channel_code).emit('broadcast-question', JSON.stringify({ question: words, language_name: language.language_name, status: true }));
 
             res.status(200).json({data:words, status:true})
         } catch (err) {

@@ -16,6 +16,14 @@ let languageSchema = mongoose.Schema({
     language_icon: {
         type: String,
         require: [true, "Icon bahasa harus diisi"]
+    },
+    language_name_en: {
+        type: String,
+        require: [true, "Isi Nama bahasa dalam Inggris"]
+    },
+    language_name_id: {
+        type: String,
+        require: [true, "Isi Nama bahasa dalam Bahasa Indonesia"]
     }
 })
 

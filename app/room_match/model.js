@@ -14,7 +14,7 @@ let roomSchema = mongoose.Schema({
         type: Number,
         default: 1
     },
-    time_start: {
+    datetime_match: {
         type: Date,
         require: [false]
     },
@@ -24,9 +24,16 @@ let roomSchema = mongoose.Schema({
     time_match: {
         type: Number
     },
+    length_word: {
+        type: Number
+    },
     max_player: {
         type: Number,
         default: 2
+    },
+    level_id:{
+        type: Number,
+        default:0
     },
     room_match_detail: [{
         type:mongoose.Schema.Types.ObjectId,

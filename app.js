@@ -11,6 +11,7 @@ const authRouter = require('./app/auth/router');
 const userRouter = require('./app/user/router');
 const roomRouter = require('./app/room_match/router');
 const languageRouter = require('./app/languages/router');
+const levelRouter = require('./app/level/router');
 const { url } = require('inspector');
 
 var app = express();
@@ -46,6 +47,7 @@ app.use(`${URL}/auth`,authRouter);
 app.use(`${URL}/user`, userRouter);
 app.use(`${URL}/room`, roomRouter);
 app.use(`${URL}/language`, languageRouter);
+app.use(`${URL}/level`,levelRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -25,6 +25,7 @@ let roomDetailSchema = mongoose.Schema({
      * 0 is not ready
      * 1 is ready but not receive question
      * 2 is receive question
+     * 3 is game done
      */
     is_ready:{
         type:Number,

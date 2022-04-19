@@ -12,6 +12,10 @@ let indonesiaWordsSchema = mongoose.Schema({
     meaning: {
         type: String,
         require: [true]
+    },
+    length_word: {
+        type: Number,
+        require: [true]
     }
 });
 
