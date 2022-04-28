@@ -9,10 +9,6 @@ let languageSchema = mongoose.Schema({
         type:String,
         require:[true,"Kode bahasa harus diisi"]
     },
-    language_collection:{
-        type: String,
-        require: [true, "Nama Koleksi bahasa harus diisi"]
-    },
     language_icon: {
         type: String,
         require: [true, "Icon bahasa harus diisi"]

@@ -28,7 +28,7 @@ let addUserToRooms = async (channel_code, language_name, room_detail, socket_id)
         channel_code: channel_code,
         language_code: language_name, 
         player_id:[
-            room_detail.player_id._id
+            room_detail.player_id
         ], 
         socket_id: socket_id }
     await RoomSocket.findOneAndUpdate(
@@ -90,10 +90,10 @@ socketapi.io.on("connection", function (socket) {
         // socket.emit('set-room', parse.player_id);
             
     });
-
+    // untuk join room (lakukan sebelum jalanin socket lain)
     socket.on('join-room', function (data) {
         var parse = JSON.parse(data);
-        console.log("join room "+parse.player_id);
+        console.log("join room "+data);
         socket.join(parse.channel_code);
         socket.to(parse.channel_code).emit('eventName', "on connect");
     });

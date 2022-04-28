@@ -6,12 +6,13 @@ var Language = require('../languages/model');
 var Level = require('../level/model');
 var moment = require('moment-timezone');
 
-var stringGenerate = (length=5, charlist= true)=>{
+var stringGenerate = (length=5, charlistBol= true)=>{
     var text = "";
     var charList = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    if(!charList){
+    if (!charlistBol){
         charList = "0123456789";
     }
+    
     for (let i = 0; i < length; i++) {
         text += charList.charAt(Math.floor(Math.random()*charList.length));
     }
@@ -50,25 +51,26 @@ module.exports = {
      * 8. create detail room match => player_id => who create the match; is_host => 1; score => 0
      * 
      * parameter
-     * language_id
+    * language_code
      * time_watch
      * datetime_match,
      * total_question,
      * max_player
+     * level
      * 
      * nanti pada client setelah ngejalanin fungsi method ini pada client, 
     * dari client wajib ngirim emit ke search-room untuk daftar 
      */
     createRoom: async (req, res, next) => {
         try {
-            const language = await Language.findById(req.body.language_id);
+            const language = await Language.findOne({language_code: req.body.language_code});
             const maxPlayer = req.body.max_player;
             const totalQuestion = req.body.total_question;
-            const roomCode = stringGenerate(8);
+            const roomCode = stringGenerate(8, false);
             const channel_code = stringGenerate(12);
             const datetime_match = new Date(req.body.datetime_match);
             const level_id = req.body.level;
-            const now = moment(datetime_match).tz("Asia/Makassar").format("YYYY-MM-DD HH:mm:ss");
+            const now = moment(datetime_match).tz("Asia/Makassar").format("YYYY-MM-DD HH:mm:ss"); 
             let roomMatchDetail = new RoomMatchDetail({
                 player_id    : req.user._id,
                 player       : req.user._id,
@@ -113,7 +115,12 @@ module.exports = {
 
             
         } catch (err) {
-            res.status(500).json({ message: err.message || `Internal server error` })
+            if (err.stack) {
+                console.log('\nStacktrace:')
+                console.log('====================')
+                console.log(err.stack);
+            }
+            res.status(500).json({ message: err.message|| `Internal server error` })
         }
 
     },
@@ -315,14 +322,14 @@ module.exports = {
      * @param {*} next 
      * 
      * input
-     * language_id => id
+     * language_code => string
      * question_num => int
      * channel_code => string
      * length_word => int
      */
     getPackageQuestion: async (req, res, next) => {
         try {
-            const language = await Language.findById(req.query.language_id);
+            const language = await Language.findOne({language_code:req.query.language_code});
             const limit = req.query.question_num ?? 10;
             const length_w = req.query.length_word ?? 3;
             let words;
