@@ -23,14 +23,19 @@ let roomDetailSchema = mongoose.Schema({
     },
     /**
      * 0 is not ready
-     * 1 is ready but not receive question
-     * 2 is receive question
-     * 3 is game done
+     * 1 is ready 
      */
     is_ready:{
         type:Number,
         default: 0
     },
+    /**
+    * 0 is not ready
+    * 1 is ready but not receive question
+    * 2 is receive question
+    * 3 is game done
+    * 4 is player out from room
+    */
     status_player:{
         type:Number,
         default:0

@@ -108,7 +108,7 @@ module.exports = {
                         path: 'player',
                         select: '_id email name username role user_code createdAt updatedAt'
                     }
-                });
+                }).populate('language');
 
             // socketapi.io.emit("test", channel_code, language.language_code, req.user._id);
             res.status(200).json({ data: result, status: true });
@@ -166,8 +166,15 @@ module.exports = {
                 return res.status(403).json({ message: "Room sudah penuh", status: false })
             }
 
+            var foundUser = roomMatch.room_match_detail.find((element) => element.player_id.toString() == req.user._id.toString());
+            console.log(foundUser);
+            // console.log(req.user._id);
+            // console.log(roomMatch.room_match_detail);
+
             let newRoom = [];
-            newRoom.push(roomMatch.room_match_detail[0]._id);
+            roomMatch.room_match_detail.forEach(element => {
+                newRoom.push(element._id);
+            });
 
             let roomDetail = new RoomMatchDetail({
                 player_id: req.user._id, 
@@ -179,9 +186,12 @@ module.exports = {
                 status_player:1
             });
             
-            await roomDetail.save()
+            if (foundUser == undefined){
+                await roomDetail.save()
 
-            newRoom.push(roomDetail._id);
+                newRoom.push(roomDetail._id);
+            }
+            
 
             await RoomMatch.findOneAndUpdate(
                 { _id: roomMatch._id },
@@ -194,7 +204,7 @@ module.exports = {
                     path: 'player',
                     select: '_id email name username role user_code createdAt updatedAt'
                 }
-            })
+            }).populate('language')
 
 
             res.status(200).json({ data: result, status: true });

@@ -10,6 +10,12 @@ let roomSchema = mongoose.Schema({
         type: String,
         require: [true, 'Kode Channel harus dibuat'],
     },
+    /**
+     * 0 is open room
+     * 1 is start
+     * 2 is end
+     * 3 is cancel game
+     */
     status_game: {
         type: Number,
         default: 1

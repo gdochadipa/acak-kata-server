@@ -121,12 +121,14 @@ socketapi.io.on("connection", function (socket) {
     socket.on('status-player', (data) =>{
         console.log();
         var parse = JSON.parse(data); 
-        socket.to(parse.channel_code).emit('broadcast-status-player', JSON.stringify({ room_detail_id: parse.room_detail_id, status: parse.is_ready, target: 'update-status' }));
+        socket.to(parse.channel_code).emit('broadcast-status-player', JSON.stringify({ room_detail_id: parse.room_detail_id, is_ready: parse.is_ready, status_player: parse.status_player, target: 'update-status-player' }));
     });
 
-    socket.on('test',(data)=>{
-        console.log(data);
+    socket.on('status-game', (data) => {
+        var parse = JSON.parse(data);
+        socket.to(parse.channel_code).emit('broadcast-status-game', JSON.stringify({ room_id: parse.room_id, status_game: parse.status_game, target: 'update-status-game' }));
     });
+
 
     /**
      * 1. channel_code
