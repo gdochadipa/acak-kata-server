@@ -145,7 +145,7 @@ module.exports = {
 
                     res.status(200).json({
                         data: {
-                            id: user.id,
+                            _id: user.id,
                             username: user.username,
                             email: user.email,
                             name: user.name,

@@ -51,11 +51,12 @@ module.exports = {
      * 8. create detail room match => player_id => who create the match; is_host => 1; score => 0
      * 
      * parameter
-    * language_code
-     * time_watch
+     * language_code
+     * time_match
      * datetime_match,
      * total_question,
-     * max_player
+     * max_player,
+     * length_word,
      * level
      * 
      * nanti pada client setelah ngejalanin fungsi method ini pada client, 
@@ -90,6 +91,7 @@ module.exports = {
                 time_match    : req.body.time_match,
                 total_question: totalQuestion,
                 max_player    : maxPlayer,
+                length_word: req.body.length_word,
                 level_id: level_id,
                 room_match_detail:[
                     roomMatchDetail._id
@@ -158,7 +160,7 @@ module.exports = {
                 path: 'room_match_detail'
             });
 
-            if (!roomMatch) {
+            if (!roomMatch || roomMatch.status_game != 0) {
                 return res.status(403).json({message:"Room tidak ditemukan", status:false})
             }
 
@@ -167,7 +169,7 @@ module.exports = {
             }
 
             var foundUser = roomMatch.room_match_detail.find((element) => element.player_id.toString() == req.user._id.toString());
-            console.log(foundUser);
+            // console.log(foundUser);
             // console.log(req.user._id);
             // console.log(roomMatch.room_match_detail);
 
@@ -214,7 +216,58 @@ module.exports = {
             res.status(500).json({ message: err.message || `Internal server error` })
         }
     },
+    /**
+     * 
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     * 
+     * update status game
+     * room_code
+     * status_game 
+     *  0 => open game
+     *  1 => in game
+     *  2 => game done
+     *  3 => cancel game
+     */
+    updateStatusGame: async (req, res, next) =>{
+        try {
+            let roomMatch = await RoomMatch.findOneAndUpdate({ room_code: req.body.room_code },{status_game:req.body.status_game});
+            let result = await RoomMatch.findOne({ _id: roomMatch._id })
+                .populate({
+                    path: 'room_match_detail',
+                    populate: {
+                        path: 'player',
+                        select: '_id email name username role user_code createdAt updatedAt'
+                    }
+                }).populate('language');
+                res.status(200).json({data:result, status:true});
 
+        } catch (err) {
+            res.status(500).json({ message: err.message || `Internal server error` })
+        }
+    },
+    /**
+     * 
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     * require
+     *  => room_code
+     */
+    updateStatusPlayer: async(req, res, next) => {
+        try {
+            let roomMatchDetail = await RoomMatchDetail.findOneAndUpdate({ _id: req.body.id}, {status_player:req.body.status_player});
+            let result = await RoomMatchDetail.findOne({ _id: roomMatchDetail._id })
+                .populate({
+                    populate: 'player',
+                    select:'_id email name username role user_code createdAt updatedAt'
+                });
+            res.status(200).json({ data: result, status: true });
+        } catch (err) {
+            res.status(500).json({ message: err.message || `Internal server error` })
+        }
+    },
     findRoomWithRoomCode:async (req, res, next) =>{
         try {
             let roomMatch = await RoomMatch.findOne({ room_code: req.body.room_code })
@@ -378,7 +431,7 @@ module.exports = {
             words = suffleWords(words);
             words = words.slice(0, limit);
 
-            socketapi.io.to(req.query.channel_code).emit('broadcast-question', JSON.stringify({ question: words, language_name: language.language_name, status: true }));
+            // socketapi.io.to(req.query.channel_code).emit('broadcast-question', JSON.stringify({ question: words, language_name: language.language_name, status: true }));
 
             res.status(200).json({data:words, status:true})
         } catch (err) {

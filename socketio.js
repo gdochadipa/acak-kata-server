@@ -82,7 +82,7 @@ socketapi.io.on("connection", function (socket) {
 
     socket.on('search-room',(data)=>{
         var parse = JSON.parse(data);
-
+        console.log("search room " + parse.room_detail);
         //emit set room => room_detail
         socket.to(parse.channel_code).emit('set-room', JSON.stringify({ room_detail: parse.room_detail, target: 'update-player'}));
         addUserToRooms(parse.channel_code, parse.language_code, parse.room_detail, socket.id);
@@ -110,22 +110,24 @@ socketapi.io.on("connection", function (socket) {
      */
     socket.on('send-question', (data)=>{
         var parse = JSON.parse(data);
-        if (checkRoom(parse.channel_code)){
-            socket.to(parse.channel_code).emit('broadcast-question', JSON.stringify({ question: parse.question, language_name: parse.language_code, status: true }));
-        }else{
-            socket.to(parse.channel_code).emit('broadcast-question', JSON.stringify({ question: parse.question, language_name: parse.language_code, status: false }));
-        }
+        console.log('broadcast status ' + parse.question.length + " status player " + parse.language_code);
+        // if (checkRoom(parse.channel_code)){
+        //     socket.to(parse.channel_code).emit('broadcast-question', JSON.stringify({ question: parse.question, language_name: parse.language_code, status: true }));
+        // }else{
+        // }
+        socket.to(parse.channel_code).emit('broadcast-question', JSON.stringify({ question: parse.question, language_name: parse.language_code, status: false, target: 'receive_question' }));
 
     });
 
     socket.on('status-player', (data) =>{
-        console.log();
         var parse = JSON.parse(data); 
+        console.log('update status ' + parse.room_detail_id + " status player " + parse.status_player);
         socket.to(parse.channel_code).emit('broadcast-status-player', JSON.stringify({ room_detail_id: parse.room_detail_id, is_ready: parse.is_ready, status_player: parse.status_player, target: 'update-status-player' }));
     });
 
     socket.on('status-game', (data) => {
         var parse = JSON.parse(data);
+        console.log('update status ' + parse.room_id + " status game " + parse.status_game);
         socket.to(parse.channel_code).emit('broadcast-status-game', JSON.stringify({ room_id: parse.room_id, status_game: parse.status_game, target: 'update-status-game' }));
     });
 

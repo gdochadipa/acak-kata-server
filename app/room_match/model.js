@@ -18,7 +18,7 @@ let roomSchema = mongoose.Schema({
      */
     status_game: {
         type: Number,
-        default: 1
+        default: 0
     },
     datetime_match: {
         type: Date,
