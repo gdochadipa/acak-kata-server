@@ -268,6 +268,13 @@ module.exports = {
             res.status(500).json({ message: err.message || `Internal server error` })
         }
     },
+    /**
+     * 
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     * @returns 
+     */
     findRoomWithRoomCode:async (req, res, next) =>{
         try {
             let roomMatch = await RoomMatch.findOne({ room_code: req.body.room_code })
@@ -285,6 +292,36 @@ module.exports = {
 
             if (roomMatch.room_match_detail.length >= roomMatch.max_player) {
                 return res.status(403).json({ message: "Room sudah penuh", status: false })
+            }
+
+            res.status(200).json({ data: roomMatch, status: true });
+
+        } catch (err) {
+            res.status(500).json({ message: err.message || `Internal server error` })
+        }
+    },
+
+    /**
+     * 
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     * @returns 
+     */
+    findRoomByID: async (req, res, next) => {
+        try {
+            
+            let roomMatch = await RoomMatch.findOne({ _id: req.query.id })
+                .populate({
+                    path: 'room_match_detail',
+                    populate: {
+                        path: 'player',
+                        select: '_id email name username role user_code createdAt updatedAt'
+                    }
+                }).populate('language');
+
+            if (!roomMatch) {
+                return res.status(403).json({ message: "Room tidak ditemukan", status: false })
             }
 
             res.status(200).json({ data: roomMatch, status: true });
