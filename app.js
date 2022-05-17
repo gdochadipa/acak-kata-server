@@ -1,5 +1,6 @@
 var createError = require('http-errors');
 var express = require('express');
+var session = require('express-session');
 var bodyParser = require('body-parser');
 var path = require('path');
 var cookieParser = require('cookie-parser');
@@ -7,6 +8,11 @@ var logger = require('morgan');
 
 var categoryRouter = require('./app/category/router');
 const authRouter = require('./app/auth/router');
+const userRouter = require('./app/user/router');
+const roomRouter = require('./app/room_match/router');
+const languageRouter = require('./app/languages/router');
+const levelRouter = require('./app/level/router');
+const { url } = require('inspector');
 
 var app = express();
 const URL = `/api/v1`;
@@ -18,6 +24,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: true,
+  cookie: {}
+}));
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -31,6 +44,10 @@ app.use('/', categoryRouter);
 //api 
 
 app.use(`${URL}/auth`,authRouter);
+app.use(`${URL}/user`, userRouter);
+app.use(`${URL}/room`, roomRouter);
+app.use(`${URL}/language`, languageRouter);
+app.use(`${URL}/level`,levelRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -7,5 +7,14 @@
   <body>
     <h1><%= title %></h1>
     <p>Welcome to <%= title %></p>
+    <!-- <form action="/create-room" method="POST">
+      <input name="room" type="text" required>
+      <button type="submit">New Room</button>
+    </form> -->
   </body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+     var socket = io();
+     socket.emit('search-room', "test", "test", "6210db7c31803aa2e8338cb0");
+  </script>
 </html>

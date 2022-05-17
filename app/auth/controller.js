@@ -49,8 +49,21 @@ module.exports = {
                     await user.save();
                     delete user._doc.password;
 
+                    const token = jwt.sign({
+                        user: {
+                            id: user.id,
+                            username: user.username,
+                            email: user.email,
+                            name: user.name,
+                            avatar: user.avatar,
+                            user_code: user.user_code
+                        }
+                    }, config.jwtKey);
+
                     res.status(201).json({
-                        data: user
+                        data: user,
+                        token: token,
+                        status: true
                     });
 
                 } catch (error) {
@@ -58,7 +71,8 @@ module.exports = {
                         return res.status(422).json({
                             error: 1,
                             message: err.message,
-                            fields: err.errors
+                            fields: err.errors,
+                            status: false
                         })
                     }
                     next(err)
@@ -79,8 +93,21 @@ module.exports = {
                await user.save();
                delete user._doc.password;
 
+               const token = jwt.sign({
+                   user: {
+                       id: user.id,
+                       username: user.username,
+                       email: user.email,
+                       name: user.name,
+                       avatar: user.avatar,
+                       user_code: user.user_code
+                   }
+               }, config.jwtKey);
+
                res.status(201).json({
-                   data: user
+                   data: user,
+                   token: token,
+                   status: true
                });
            }
 
@@ -88,7 +115,8 @@ module.exports = {
             if(error && error.name === "ValidationError"){
                 return res.status(422).json({
                     message:error.message,
-                    fields:error.errors
+                    fields:error.errors,
+                    status: false
                 });
             }
             next(error);
@@ -116,7 +144,15 @@ module.exports = {
                     }, config.jwtKey)
 
                     res.status(200).json({
-                        data:{token}
+                        data: {
+                            _id: user.id,
+                            username: user.username,
+                            email: user.email,
+                            name: user.name,
+                            avatar: user.avatar,
+                            user_code: user.user_code
+                        },
+                        token:token
                     })
                 } else {
                     res.status(403).json({
