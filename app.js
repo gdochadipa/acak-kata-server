@@ -12,10 +12,14 @@ const userRouter = require('./app/user/router');
 const roomRouter = require('./app/room_match/router');
 const languageRouter = require('./app/languages/router');
 const levelRouter = require('./app/level/router');
+const jobs = require('./jobs/index');
 const { url } = require('inspector');
 
 var app = express();
 const URL = `/api/v1`;
+
+// TZ = "Asia/Makassar";
+// console.log(new Date().toString());
 
 //body parser
 app.use(bodyParser.json());
@@ -31,6 +35,8 @@ app.use(session({
   saveUninitialized: true,
   cookie: {}
 }));
+
+
 
 app.use(logger('dev'));
 app.use(express.json());

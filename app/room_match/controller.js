@@ -5,6 +5,7 @@ const LanguageWords = require('../language_words/language_words');
 var Language = require('../languages/model');
 var Level = require('../level/model');
 var moment = require('moment-timezone');
+const {schedule} = require('../../jobs/scheduler');
 
 var stringGenerate = (length=5, charlistBol= true)=>{
     var text = "";
@@ -31,6 +32,37 @@ var suffleWords = (words =[])=>{
         }
     }
     return words;
+}
+
+/**
+ * 
+ * @param {Date} date1 
+ * @param {Date} ianatz 
+ * @returns {Date}
+ */
+var timeZone = (date, ianatz)=>{
+
+    // suppose the date is 12:00 UTC
+    var invdate = new Date(date.toLocaleString('en-US', {
+        timeZone: ianatz
+    }));
+
+    // then invdate will be 07:00 in Toronto
+    // and the diff is 5 hours
+    var diff = date.getTime() - invdate.getTime();
+
+    // so 12:00 in Toronto is 17:00 UTC
+    return new Date(date.getTime() - diff); // needs to substract
+
+}
+
+/**
+ * 
+ * @param {Date} date 
+ * @returns {Date}
+ */
+var normalizedDateTime = (date) => {
+
 }
 
 module.exports = {
@@ -71,7 +103,11 @@ module.exports = {
             const channel_code = stringGenerate(12);
             const datetime_match = new Date(req.body.datetime_match);
             const level_id = req.body.level;
-            const now = moment(datetime_match).tz("Asia/Makassar").format("YYYY-MM-DD HH:mm:ss"); 
+            console.log("dari request |"+req.body.datetime_match);
+            console.log("dari format Datetime |" +datetime_match);
+            const now = moment(datetime_match).format(); 
+            console.log("dari format moment |" +now);
+            console.log("dari server |" + new Date());
             let roomMatchDetail = new RoomMatchDetail({
                 player_id    : req.user._id,
                 player       : req.user._id,
@@ -528,6 +564,18 @@ module.exports = {
         }
     },
 
+    testSchedule: async(req, res, next) =>{
+        console.log(new Date());
+        // let now = new Date('2022-05-21T10:36:00.000z');
+        let now = new Date(new Date().getTime() + (1 * 60 * 1000));
+        // console.log(now);
+        // const date = timeZone(now, "Asia/Makassar");
+        // console.log(date);
+        // await schedule.testSchedule("wow",date)
+        // await schedule.completeStartGame("data", date);
+        // await schedule.testNodeSchedule("wow", now)
+        res.status(200).json({ data: "berhasil", status: true });
+    }
     
 
     
