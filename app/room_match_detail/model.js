@@ -39,6 +39,10 @@ let roomDetailSchema = mongoose.Schema({
     status_player:{
         type:Number,
         default:0
+    },
+    rank_player : {
+        type:Number,
+        default:0
     }
 
 
