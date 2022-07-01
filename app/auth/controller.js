@@ -116,7 +116,8 @@ module.exports = {
                 return res.status(422).json({
                     message:error.message,
                     fields:error.errors,
-                    status: false
+                    status: false,
+                    validation:false
                 });
             }
             next(error);

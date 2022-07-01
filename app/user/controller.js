@@ -21,9 +21,9 @@ module.exports = {
     },
      editProfile: async(req, res) => {
         try {
-            let request = req.body;
+            let request = req.params;
 
-            if(req.user._id != request._id){
+            if (req.user._id != request.userId){
                 return res.status(403).json({ message: "User tidak ditemukan", status: false })
             }
 
