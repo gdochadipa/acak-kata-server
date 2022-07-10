@@ -175,9 +175,13 @@ socketapi.io.on("connection", function (socket) {
 
     socket.on('disconnect-room', (data)=>{
         var parse = JSON.parse(data);
-        socket.to(parse.channel_code).broadcast.emit('user-disconnected', parse.player_id);
-        deleteUserFromRoom(parse.channel_code, parse.language_name, parse.player_id)
-    })  
+        socket.to(parse.channel_code).emit('user-disconnected', JSON.stringify({ channel_code: parse.channel_code, player_id: parse.player_id, target: 'user-disconnected' }));
+        console.log('disconnect room '+data);
+        // deleteUserFromRoom(parse.channel_code, parse.language_name, parse.player_id)
+    });
+    socket.on('disconnect',(data) =>{
+        console.log('a player disconnect ' + socket.id);
+    });
    
 });
 

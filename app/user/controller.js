@@ -27,10 +27,15 @@ module.exports = {
                 return res.status(403).json({ message: "User tidak ditemukan", status: false })
             }
 
+            let count = await Users.countDocuments({ email: req.body.email });
+            if (count > 1) {
+                return res.status(403).json({ message: `${req.body.email} sudah terdaftar`, status: false })
+            }
+
             await Users.findOneAndUpdate({_id:req.user.id},{
-                username: request.username,
-                email: request.email,
-                name: request.name
+                username: req.body.username,
+                email: req.body.email,
+                name: req.body.name
 
             });
 

@@ -200,9 +200,17 @@ module.exports = {
                 return res.status(403).json({message:"Room tidak ditemukan", status:false})
             }
 
-            if (roomMatch.room_match_detail.length >= roomMatch.max_player ){
+            let confirmDataPlayer = roomMatch.room_match_detail.filter((e) => {
+                return String(e.player_id) == String(req.user._id);
+            });
+            
+
+            if (roomMatch.room_match_detail.length >= roomMatch.max_player && !(confirmDataPlayer.length > 0)){
+
                 return res.status(403).json({ message: "Room sudah penuh", status: false })
+                
             }
+            
 
             var foundUser = roomMatch.room_match_detail.find((element) => element.player_id.toString() == req.user._id.toString());
             // console.log(foundUser);
@@ -419,24 +427,17 @@ module.exports = {
      * room_id
      * 
      */
-    cancelGameFromRoom: async(req, res, next) => {
+    disconnectFromRoom: async(req, res, next) => {
         try {
             let result = await RoomMatch.findOne({ _id: req.body.room_id })
                 .populate({
                     path: 'room_match_detail'
                 });
 
-            if (result.room_match_detail.length < result.max_player && result.room_match_detail.length == 1) {
-                throw new Error("Pemain kurang dari maksimal player");
-                //kayaknya hapus room_match karena engga ada player di room
-            }
+            let confirmDataPlayer = result.room_match_detail.find((e) => e.player_id.toString() == req.user._id.toString());
+           
 
-            let confirmDataPlayer = result.room_match_detail.filter((e) => {
-                return e.player_id == req.user._id ? e : null
-            });
-
-
-            if (confirmDataPlayer == null) {
+            if (confirmDataPlayer.length == 0) {
                 throw new Error("Pemain tidak ditemukan di room");
             }
             let roomDetailArr = result.room_match_detail;
@@ -447,7 +448,7 @@ module.exports = {
             res.status(200).json({ message: "success cancel", status: true })
 
         } catch (err) {
-            res.status(500).json({ message: err.message || `Internal server error` })
+            res.status(500).json({ message: err.message || `Internal server error`, status: false })
         }
     },
 
@@ -505,8 +506,8 @@ module.exports = {
             words = words.slice(0, limit);
 
             // socketapi.io.to(req.query.channel_code).emit('broadcast-question', JSON.stringify({ question: words, language_name: language.language_name, status: true }));
-
-            res.status(200).json({data:words, status:true})
+            
+            res.status(200).json({data:words, status:true, encyrpt:false})
         } catch (err) {
             res.status(500).json({ message: err.message || `Internal server error`, status: false})
         }
@@ -546,7 +547,7 @@ module.exports = {
      */
     getResultMatch: async(req, res, next) =>{
         try {
-            let result = await RoomMatch.findOne({ _id: req.body.room_march_detail_id})
+            let result = await RoomMatch.findOne({ _id: req.body.room_match_id })
                 .populate({
                     path: 'room_match_detail',
                     populate: {
