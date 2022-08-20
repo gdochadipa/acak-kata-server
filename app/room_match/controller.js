@@ -102,12 +102,16 @@ module.exports = {
             const roomCode = stringGenerate(5, false);
             const channel_code = stringGenerate(12);
             const datetime_match = new Date(req.body.datetime_match);
+            const datetime_client = new Date(req.body.datetime_client);
             const level_id = req.body.level;
-            console.log("dari request |"+req.body.datetime_match);
-            console.log("dari format Datetime |" +datetime_match);
+            console.log("dari datetime_match |"+datetime_match);
+            console.log("dari datetime_client |" + datetime_client);
             const now = moment(datetime_match).format(); 
-            console.log("dari format moment |" +now);
-            console.log("dari server |" + new Date());
+            var diff = datetime_match - datetime_client;
+
+            targetTime = new Date(new Date().getTime() + diff);
+            // console.log("dari format moment |" +now);
+            // console.log("dari server |" + new Date());
             let roomMatchDetail = new RoomMatchDetail({
                 player_id    : req.user._id,
                 player       : req.user._id,
@@ -147,6 +151,15 @@ module.exports = {
                         select: '_id email name username role user_code createdAt updatedAt'
                     }
                 }).populate('language');
+
+            await schedule.runGameSchedule(() => {
+                console.log("game shoud be running now");
+                console.log('====================================');
+                console.log(result.channel_code);
+                console.log({ data: result, target: 'starting-game-by-schedule', status: true });
+                console.log('====================================');
+                socketapi.io.to(result.channel_code).emit('starting-game-by-schedule', JSON.stringify({ data: result, target: 'starting-game-by-schedule', status:true }));
+            }, targetTime);
 
             // socketapi.io.emit("test", channel_code, language.language_code, req.user._id);
             res.status(200).json({ data: result, status: true });
@@ -566,15 +579,29 @@ module.exports = {
     },
 
     testSchedule: async(req, res, next) =>{
-        console.log(new Date());
+
+        const datetime_client = new Date(req.body.datetime_client);
+        const datetime_target = new Date(req.body.datetime_target);
+        console.log("dari datetime_client |" + datetime_client);
+        console.log("dari datetime_target |" + datetime_target);
+        
+        var diff = datetime_target - datetime_client;
+
+        console.log(diff);
+        var text = 'this';
+
         // let now = new Date('2022-05-21T10:36:00.000z');
-        let now = new Date(new Date().getTime() + (1 * 60 * 1000));
+        now = new Date(new Date().getTime() + diff);
         // console.log(now);
         // const date = timeZone(now, "Asia/Makassar");
         // console.log(date);
         // await schedule.testSchedule("wow",date)
         // await schedule.completeStartGame("data", date);
-        // await schedule.testNodeSchedule("wow", now)
+        await schedule.runGameSchedule(() => {
+            socketapi.io.emit('starting-game-by-schedule', JSON.stringify({ data: 'onTes', target: 'starting-game-by-schedule' }));
+        }, now);
+
+        
         res.status(200).json({ data: "berhasil", status: true });
     }
     

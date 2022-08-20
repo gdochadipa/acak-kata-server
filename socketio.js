@@ -60,7 +60,7 @@ let setPlayerReceiveQuestion = async(room_detail_id) =>{
 
 let updateStatusPlayer = async (room_detail_id, status_player, is_ready, score) => {
     // console.log("on id => " + room_detail_id);
-    let roomMatchDetail =  await RoomMatchDetail.findOneAndUpdate({ _id: room_detail_id }, { is_ready: is_ready, status_player: status_player, score });
+    let roomMatchDetail = await RoomMatchDetail.findOneAndUpdate({ _id: room_detail_id }, { is_ready: is_ready, status_player: status_player, score: score });
     // console.log("on update => " + roomMatchDetail);
 }
 

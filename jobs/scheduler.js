@@ -19,6 +19,14 @@ const schedule = {
             console.log('Happy Birthday Babe ', new Date());
             console.log(data);
         })
+    },
+    runGameSchedule: async(callback, time) =>{
+        //nanti bakal ngejalanin callback disini
+        //callbacknya adalah socket berupa soal dulu baru status permainan dimulai
+        console.log(time);
+        nodeSchedule.scheduleJob(time, () => {
+            callback();
+        })
     }
 }
 
