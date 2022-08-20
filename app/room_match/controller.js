@@ -154,10 +154,6 @@ module.exports = {
 
             await schedule.runGameSchedule(() => {
                 console.log("game shoud be running now");
-                console.log('====================================');
-                console.log(result.channel_code);
-                console.log({ data: result, target: 'starting-game-by-schedule', status: true });
-                console.log('====================================');
                 socketapi.io.to(result.channel_code).emit('starting-game-by-schedule', JSON.stringify({ data: result, target: 'starting-game-by-schedule', status:true }));
             }, targetTime);
 

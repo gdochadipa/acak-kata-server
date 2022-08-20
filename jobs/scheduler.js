@@ -23,7 +23,7 @@ const schedule = {
     runGameSchedule: async(callback, time) =>{
         //nanti bakal ngejalanin callback disini
         //callbacknya adalah socket berupa soal dulu baru status permainan dimulai
-        console.log(time);
+        console.log("a game start at :"+time);
         nodeSchedule.scheduleJob(time, () => {
             callback();
         })
