@@ -447,7 +447,7 @@ module.exports = {
            
 
             if (confirmDataPlayer.length == 0) {
-                throw new Error("Pemain tidak ditemukan di room");
+                res.status(200).json({ message: "Pemain tidak ditemukan di room, tidak ada proses hapus", status: true })
             }
             let roomDetailArr = result.room_match_detail;
             roomDetailArr.splice(roomDetailArr.findIndex(v => v._id == confirmDataPlayer._id),1);

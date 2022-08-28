@@ -43,6 +43,10 @@ let roomDetailSchema = mongoose.Schema({
     rank_player : {
         type:Number,
         default:0
+    },
+    socket_id:{
+        type:String,
+        default:null
     }
 
 

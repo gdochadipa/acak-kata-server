@@ -64,6 +64,31 @@ let updateStatusPlayer = async (room_detail_id, status_player, is_ready, score) 
     // console.log("on update => " + roomMatchDetail);
 }
 
+let updateSocketIdPlayer = async (room_detail_id, socket_id) =>{
+    await RoomMatchDetail.findOneAndUpdate({ _id: room_detail_id }, { socket_id: socket_id });
+
+}
+
+let changeHost = async(room_id, player_id_disconnect)=>{
+    let roomMatch = await RoomMatch.findOne({ _id: room_id }).populate('room_match_detail');
+    if (roomMatch.room_match_detail.length > 0){
+
+    }
+}
+
+let deletePlayerIfDisconnect = async (socket_id, socket) => {
+    //0 is not ready
+    let roomPlayer = await RoomMatchDetail.find({ socket_id: socket_id, status_player: 0 }).populate('room_id');
+    
+    if (roomPlayer.length  > 0) {
+
+        let detail = roomPlayer[0];
+        socket.to(detail.room_id.channel_code).emit('user-disconnected', JSON.stringify({ channel_code: detail.room_id.channel_code, player_id: detail.player_id, target: 'user-disconnected' }));
+        await RoomMatchDetail.findByIdAndRemove({ _id: detail._id});
+    }
+    
+}
+
 let updateStatusGame = async (room_id, status_game) => {
     // console.log("on id => " + room_id);
     let roomMatch =  await RoomMatch.findOneAndUpdate({ _id: room_id }, { status_game: status_game });
@@ -107,7 +132,8 @@ socketapi.io.on("connection", function (socket) {
         var parse = JSON.parse(data);
         console.log("join room "+data);
         socket.join(parse.channel_code);
-        socket.to(parse.channel_code).emit('eventName', JSON.stringify({ data: 'onTes' }));
+        updateSocketIdPlayer(parse.room_detail_id, socket.id);
+        // socket.to(parse.channel_code).emit('eventName', JSON.stringify({ data: 'onTes' }));
     });
 
     socket.on("onTest", function (data) {
@@ -181,6 +207,7 @@ socketapi.io.on("connection", function (socket) {
     });
     socket.on('disconnect',(data) =>{
         console.log('a player disconnect ' + socket.id);
+        deletePlayerIfDisconnect(socket.id, socket);
     });
    
 });
