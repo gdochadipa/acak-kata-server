@@ -66,25 +66,44 @@ let updateStatusPlayer = async (room_detail_id, status_player, is_ready, score) 
 
 let updateSocketIdPlayer = async (room_detail_id, socket_id) =>{
     await RoomMatchDetail.findOneAndUpdate({ _id: room_detail_id }, { socket_id: socket_id });
-
 }
 
 let changeHost = async(room_id, player_id_disconnect)=>{
-    let roomMatch = await RoomMatch.findOne({ _id: room_id }).populate('room_match_detail');
-    if (roomMatch.room_match_detail.length > 0){
+    try {
+        let roomMatch = await RoomMatch.findOne({ _id: room_id }).populate('room_match_detail');
+        if (roomMatch.room_match_detail.length > 0) {
+            let withoutHost = roomMatch.room_match_detail.filter((item) => {
+                return item._id != player_id_disconnect
+            });
 
+            if (withoutHost.length > 0) {
+                await RoomMatchDetail.findByIdAndUpdate({ _id: withoutHost[0]._id }, { is_host: 1 });
+                await RoomMatchDetail.findByIdAndUpdate({ _id: player_id_disconnect }, { is_host: 0 });
+
+                socket.to(roomMatch.channel_code).emit('change-host', JSON.stringify({ id_host_before: player_id_disconnect, id_host_after: withoutHost[0]._id, target: 'change_host' }));
+            }
+        }
+    } catch (err) {
+        console.log(err.message);
     }
 }
 
 let deletePlayerIfDisconnect = async (socket_id, socket) => {
     //0 is not ready
-    let roomPlayer = await RoomMatchDetail.find({ socket_id: socket_id, status_player: 0 }).populate('room_id');
-    
-    if (roomPlayer.length  > 0) {
+    let roomPlayer = await RoomMatchDetail.find({ socket_id: socket_id, status_player: {$in:[0,1]} }).populate('room_id');
+
+    if (roomPlayer.length > 0) {
 
         let detail = roomPlayer[0];
-        socket.to(detail.room_id.channel_code).emit('user-disconnected', JSON.stringify({ channel_code: detail.room_id.channel_code, player_id: detail.player_id, target: 'user-disconnected' }));
+
+        // if host room is disconnect, room game will failed created and every people will exit from room
+        if (detail.is_host == 1){
+            socket.to(detail.room_id.channel_code).emit('host-exit-room', JSON.stringify({ channel_code: detail.room_id.channel_code, player_id: detail.player_id, target: 'host-exit-room' }));
+            
+        }
         await RoomMatchDetail.findByIdAndRemove({ _id: detail._id});
+        socket.to(detail.room_id.channel_code).emit('user-disconnected', JSON.stringify({ channel_code: detail.room_id.channel_code, player_id: detail.player_id, target: 'user-disconnected' }));
+
     }
     
 }
