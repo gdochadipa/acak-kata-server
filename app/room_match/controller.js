@@ -443,10 +443,14 @@ module.exports = {
                     path: 'room_match_detail'
                 });
 
+            if (result.room_match_detail.length == 0) {
+                res.status(200).json({ message: "Pemain tidak ditemukan di room, tidak ada proses hapus", status: true })
+                }
+
             let confirmDataPlayer = result.room_match_detail.find((e) => e.player_id.toString() == req.user._id.toString());
            
 
-            if (confirmDataPlayer.length == 0) {
+            if (confirmDataPlayer.length == 0 || confirmDataPlayer == undefined) {
                 res.status(200).json({ message: "Pemain tidak ditemukan di room, tidak ada proses hapus", status: true })
             }
             let roomDetailArr = result.room_match_detail;

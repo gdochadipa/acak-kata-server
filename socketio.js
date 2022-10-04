@@ -99,7 +99,6 @@ let deletePlayerIfDisconnect = async (socket_id, socket) => {
         // if host room is disconnect, room game will failed created and every people will exit from room
         if (detail.is_host == 1){
             socket.to(detail.room_id.channel_code).emit('host-exit-room', JSON.stringify({ channel_code: detail.room_id.channel_code, player_id: detail.player_id, target: 'host-exit-room' }));
-            
         }
         await RoomMatchDetail.findByIdAndRemove({ _id: detail._id});
         socket.to(detail.room_id.channel_code).emit('user-disconnected', JSON.stringify({ channel_code: detail.room_id.channel_code, player_id: detail.player_id, target: 'user-disconnected' }));
