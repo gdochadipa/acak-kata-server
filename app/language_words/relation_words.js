@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-let indonesiaWordsSchema = mongoose.Schema({
+let relationWordSchema = mongoose.Schema({
     id: {
         type: Number,
         require: [true]
@@ -9,18 +9,21 @@ let indonesiaWordsSchema = mongoose.Schema({
         type: String,
         require: [true]
     },
-    meaning: {
+    letter: {
         type: String,
+        require: [true]
+    },
+    language_id: {
+        type: Number,
         require: [true]
     },
     length_word: {
         type: Number,
         require: [true]
     },
-    id_relation: {
-        type: Number,
-
-    }
+    list_words:[{
+        
+        }]
 });
 
-module.exports = mongoose.model('indonesia_words', indonesiaWordsSchema);
+module.exports = mongoose.model('relation_words', relationWordSchema);

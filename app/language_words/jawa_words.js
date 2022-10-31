@@ -16,6 +16,10 @@ let jawaWordsSchema = mongoose.Schema({
     length_word: {
         type: Number,
         require: [true]
+    },
+    id_relation: {
+        type: Number,
+
     }
 });
 
