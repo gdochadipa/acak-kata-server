@@ -186,7 +186,7 @@ socketapi.io.on("connection", function (socket) {
         try {
             updateStatusGame(parse.room_id, parse.status_game)
         } catch (error) {
-            print(err.message);
+            console.log(error.message);
         }
     });
     
@@ -197,7 +197,7 @@ socketapi.io.on("connection", function (socket) {
         try {
             updateStatusPlayer(parse.room_detail_id, parse.status_player, parse.is_ready, parse.score )
         } catch (error) {
-            print(err.message);
+            console.log(error.message);
         }
     });
 
@@ -226,6 +226,25 @@ socketapi.io.on("connection", function (socket) {
     socket.on('disconnect',(data) =>{
         console.log('a player disconnect ' + socket.id);
         deletePlayerIfDisconnect(socket.id, socket);
+    });
+
+    socket.on('test-question', (data) => {
+
+        socket.to("room1").emit('test-broadcast-question', data);
+
+    });
+
+    socket.on('test-join-room', (data)=>{
+        // data = '{"channel_code":"test"}'
+        var parse = JSON.parse(data);
+        console.log("join room " + data);
+        socket.join(parse.channel_code);
+    })
+
+    socket.on('test-room', (data) => {
+
+        socket.to("room1").emit('test-broadcast-room', data);
+
     });
    
 });

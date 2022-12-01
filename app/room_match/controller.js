@@ -154,8 +154,8 @@ module.exports = {
                 }).populate('language');
 
             await schedule.runGameSchedule(() => {
-                console.log("game shoud be running now");
-                socketapi.io.to(result.channel_code).emit('starting-game-by-schedule', JSON.stringify({ data: result, target: 'starting-game-by-schedule', status:true }));
+                console.log("game should be running now");
+                socketapi.io.to(result.channel_code).emit('ending-game-by-schedule', JSON.stringify({ data: result, target: 'starting-game-by-schedule', status:true }));
             }, targetTime);
 
             // socketapi.io.emit("test", channel_code, language.language_code, req.user._id);
