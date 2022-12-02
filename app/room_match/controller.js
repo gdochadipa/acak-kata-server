@@ -153,9 +153,21 @@ module.exports = {
                     }
                 }).populate('language');
 
-            await schedule.runGameSchedule(() => {
-                console.log("game should be running now");
-                socketapi.io.to(result.channel_code).emit('ending-game-by-schedule', JSON.stringify({ data: result, target: 'starting-game-by-schedule', status:true }));
+            await schedule.runGameSchedule(async () => {
+                console.log("game should be end now");
+
+                await RoomMatch.findOneAndUpdate({ _id: result.id }, { status_game :3});
+
+                let roomMatch = await RoomMatch.findOne({ _id: result.id })
+                    .populate({
+                        path: 'room_match_detail',
+                        populate: {
+                            path: 'player',
+                            select: '_id email name username role user_code createdAt updatedAt'
+                        }
+                    });
+                
+                socketapi.io.to(result.channel_code).emit('ending-game-by-schedule', JSON.stringify({ data: roomMatch, target: 'ending-game-by-schedule', status:true }));
             }, targetTime);
 
             // socketapi.io.emit("test", channel_code, language.language_code, req.user._id);
