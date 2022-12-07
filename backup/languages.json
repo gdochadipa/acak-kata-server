@@ -1,0 +1,41 @@
+[{
+  "_id": {
+    "$oid": "6212e758a37dcd826da7f946"
+  },
+  "language_name": "Bahasa Indonesia",
+  "language_code": "indonesia",
+  "language_collection": "indonesia_words",
+  "language_icon": "id_lang.png",
+  "language_name_en": "Indonesians",
+  "language_name_id": "Bahasa Indonesia"
+},{
+  "_id": {
+    "$oid": "62220df84482fa9ddfb7e3c4"
+  },
+  "language_name": "Bahasa Inggris",
+  "language_code": "english",
+  "language_collection": "english_words",
+  "language_icon": "en_lang.png",
+  "language_name_en": "English",
+  "language_name_id": "Bhs Inggris"
+},{
+  "_id": {
+    "$oid": "62220e0b4482fa9ddfb7e3c5"
+  },
+  "language_name": "Bahasa Bali",
+  "language_code": "bali",
+  "language_collection": "bali_words",
+  "language_icon": "bali_lang.png",
+  "language_name_en": "Balinese Language",
+  "language_name_id": "Bahasa Bali"
+},{
+  "_id": {
+    "$oid": "62220e1d4482fa9ddfb7e3c6"
+  },
+  "language_name": "Bahasa Jawa",
+  "language_code": "java",
+  "language_collection": "jawa_words",
+  "language_icon": "java_lang.png",
+  "language_name_en": "Javanese Language",
+  "language_name_id": "Bahasa Jawa"
+}]
