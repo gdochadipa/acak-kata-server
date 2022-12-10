@@ -9,7 +9,7 @@ router.post('/search-code-room', isLoginUsers, searchingRoomWithCode);
 router.post('/confirm-game', isLoginUsers, confirmGame);
 router.post('/cancel-room', isLoginUsers, disconnectFromRoom);
 router.get('/package-question', isLoginUsers, getPackageQuestion);
-router.get('/package-question/related-word', isLoginUsers, getQuestionRelated);
+router.get('/package-question/related-word', isLoginUsers,  getQuestionRelated);
 router.post('/save-score', isLoginUsers, saveScoreMatch);
 router.get('/result-match', isLoginUsers, getResultMatch);
 router.get('/find-room', isLoginUsers, findRoomWithRoomCode);

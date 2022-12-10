@@ -3,6 +3,7 @@ var RoomMatch = require('./model')
 var RoomMatchDetail = require('../room_match_detail/model');
 const LanguageWords = require('../language_words/language_words');
 const RelationWord = require('../language_words/relation_words');
+const DictWord = require('../language_words/dict_words');
 var Language = require('../languages/model');
 var Level = require('../level/model');
 var moment = require('moment-timezone');
@@ -546,66 +547,32 @@ module.exports = {
             const language = await Language.findOne({ language_code: req.query.language_code });
             const limit = req.query.question_num ?? 10;
             const length_w = req.query.length_word ?? 3;
- 
+            console.log(req.query)
             let words;
             switch (language.language_collection) {
                 case 'indonesia_words':
-                    words = await RelationWord.find({ length_word: length_w, language_id:1 });
+                    words = await DictWord.find({ length_word: length_w, language_id:1 });
                     break;
 
                 case 'jawa_words':
-                    words = await RelationWord.find({ length_word: length_w, language_id:4 });
+                    words = await DictWord.find({ length_word: length_w, language_id:4 });
                     break;
 
                 case 'bali_words':
-                    words = await RelationWord.find({ length_word: length_w, language_id: 3 });
+                    words = await DictWord.find({ length_word: length_w, language_id: 3 });
                     break;
 
                 case 'english_words':
-                    words = await RelationWord.find({ length_word: length_w, language_id: 2 });
+                    words = await DictWord.find({ length_word: length_w, language_id: 2 });
                     break;
 
                 default:
-                    words = await RelationWord.find({ length_word: length_w, language_id: 2 });
+                    words = await DictWord.find({ length_word: length_w, language_id: 2 });
                     break;
             }
 
             words = suffleWords(words);
             words = words.slice(0, limit);
-
-            for (const i in words) {
-                if (Object.hasOwnProperty.call(words, i)) {
-                    const word = words[i];
-
-                    var relatedWord;
-
-                    switch (language.language_collection) {
-                        case 'indonesia_words':
-                            relatedWord = await LanguageWords.IndonesiaWords.find({ id_relation: word.id });
-                            break;
-
-                        case 'jawa_words':
-                            relatedWord = await LanguageWords.JawaWords.find({ id_relation: word.id });
-                            break;
-
-                        case 'bali_words':
-                            relatedWord = await LanguageWords.BaliWords.find({ id_relation: word.id });
-                            break;
-
-                        case 'english_words':
-                            relatedWord = await LanguageWords.EnglishWords.find({ id_relation: word.id });
-                            break;
-
-                        default:
-                            relatedWord = await LanguageWords.EnglishWords.find({ id_relation: word.id });
-                            break;
-
-                    }
-
-                    words[i].list_words = relatedWord;
-                    
-                }
-            }
 
 
             res.status(200).json({ data: words, status: true, encyrpt: false });
