@@ -166,7 +166,8 @@ module.exports = {
                             path: 'player',
                             select: '_id email name username role user_code createdAt updatedAt'
                         }
-                    });
+                    }).populate('language');
+
                 
                 socketapi.io.to(result.channel_code).emit('ending-game-by-schedule', JSON.stringify({ data: roomMatch, target: 'ending-game-by-schedule', status:true }));
             }, targetTime);
