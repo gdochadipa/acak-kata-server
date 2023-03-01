@@ -10,6 +10,13 @@ router.get('/', (req, res, next) =>{
 
 });
 
+// /* GET home page. */
+// router.get('/admin', async (req, res) => {
+
+//     res.render('index',{title:'Admin',name:'Admin'});    
+
+// });
+
 
 
 module.exports = router;

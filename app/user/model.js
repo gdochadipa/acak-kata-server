@@ -37,7 +37,8 @@ let userSchema = mongoose.Schema({
         default: 'JDAW',
     },
     avatar: { type: String, default: null},
-    fileName: { type: String, default: null }
+    fileName: { type: String, default: null },
+    status: {type:Number, default: 1}
 
 }, { timestamps: true })
 

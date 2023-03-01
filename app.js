@@ -12,6 +12,7 @@ const userRouter = require('./app/user/router');
 const roomRouter = require('./app/room_match/router');
 const languageRouter = require('./app/languages/router');
 const levelRouter = require('./app/level/router');
+const adminUserRouter = require('./app/user/admin_router');
 const jobs = require('./jobs/index');
 const { url } = require('inspector');
 
@@ -43,8 +44,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/adminlte', express.static(path.join(__dirname,'/node_modules/admin-lte/')));
 
 app.use('/', categoryRouter);
+app.use('/admin', adminUserRouter);
 
 
 //api 
