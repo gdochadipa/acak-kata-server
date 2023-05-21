@@ -2,9 +2,12 @@ var { socketapi, rooms} = require('../../socketio')
 var RoomMatch = require('./model')
 var RoomMatchDetail = require('../room_match_detail/model');
 const LanguageWords = require('../language_words/language_words');
+const RelationWord = require('../language_words/relation_words');
+const DictWord = require('../language_words/dict_words');
 var Language = require('../languages/model');
 var Level = require('../level/model');
 var moment = require('moment-timezone');
+const {schedule} = require('../../jobs/scheduler');
 
 var stringGenerate = (length=5, charlistBol= true)=>{
     var text = "";
@@ -31,6 +34,37 @@ var suffleWords = (words =[])=>{
         }
     }
     return words;
+}
+
+/**
+ * 
+ * @param {Date} date1 
+ * @param {Date} ianatz 
+ * @returns {Date}
+ */
+var timeZone = (date, ianatz)=>{
+
+    // suppose the date is 12:00 UTC
+    var invdate = new Date(date.toLocaleString('en-US', {
+        timeZone: ianatz
+    }));
+
+    // then invdate will be 07:00 in Toronto
+    // and the diff is 5 hours
+    var diff = date.getTime() - invdate.getTime();
+
+    // so 12:00 in Toronto is 17:00 UTC
+    return new Date(date.getTime() - diff); // needs to substract
+
+}
+
+/**
+ * 
+ * @param {Date} date 
+ * @returns {Date}
+ */
+var normalizedDateTime = (date) => {
+
 }
 
 module.exports = {
@@ -67,11 +101,19 @@ module.exports = {
             const language = await Language.findOne({language_code: req.body.language_code});
             const maxPlayer = req.body.max_player;
             const totalQuestion = req.body.total_question;
-            const roomCode = stringGenerate(8, false);
+            const roomCode = stringGenerate(5, false);
             const channel_code = stringGenerate(12);
             const datetime_match = new Date(req.body.datetime_match);
+            const datetime_client = new Date(req.body.datetime_client);
             const level_id = req.body.level;
-            const now = moment(datetime_match).tz("Asia/Makassar").format("YYYY-MM-DD HH:mm:ss"); 
+            console.log("dari datetime_match |"+datetime_match);
+            console.log("dari datetime_client |" + datetime_client);
+            const now = moment(datetime_match).format(); 
+            var diff = datetime_match - datetime_client;
+
+            targetTime = new Date(new Date().getTime() + diff);
+            // console.log("dari format moment |" +now);
+            // console.log("dari server |" + new Date());
             let roomMatchDetail = new RoomMatchDetail({
                 player_id    : req.user._id,
                 player       : req.user._id,
@@ -111,6 +153,24 @@ module.exports = {
                         select: '_id email name username role user_code createdAt updatedAt'
                     }
                 }).populate('language');
+
+            await schedule.runGameSchedule(async () => {
+                console.log("game should be end now");
+
+                await RoomMatch.findOneAndUpdate({ _id: result.id }, { status_game :3});
+
+                let roomMatch = await RoomMatch.findOne({ _id: result.id })
+                    .populate({
+                        path: 'room_match_detail',
+                        populate: {
+                            path: 'player',
+                            select: '_id email name username role user_code createdAt updatedAt'
+                        }
+                    }).populate('language');
+
+                
+                socketapi.io.to(result.channel_code).emit('ending-game-by-schedule', JSON.stringify({ data: roomMatch, target: 'ending-game-by-schedule', status:true }));
+            }, targetTime);
 
             // socketapi.io.emit("test", channel_code, language.language_code, req.user._id);
             res.status(200).json({ data: result, status: true });
@@ -164,9 +224,17 @@ module.exports = {
                 return res.status(403).json({message:"Room tidak ditemukan", status:false})
             }
 
-            if (roomMatch.room_match_detail.length >= roomMatch.max_player ){
+            let confirmDataPlayer = roomMatch.room_match_detail.filter((e) => {
+                return String(e.player_id) == String(req.user._id);
+            });
+            
+
+            if (roomMatch.room_match_detail.length >= roomMatch.max_player && !(confirmDataPlayer.length > 0)){
+
                 return res.status(403).json({ message: "Room sudah penuh", status: false })
+                
             }
+            
 
             var foundUser = roomMatch.room_match_detail.find((element) => element.player_id.toString() == req.user._id.toString());
             // console.log(foundUser);
@@ -383,25 +451,22 @@ module.exports = {
      * room_id
      * 
      */
-    cancelGameFromRoom: async(req, res, next) => {
+    disconnectFromRoom: async(req, res, next) => {
         try {
             let result = await RoomMatch.findOne({ _id: req.body.room_id })
                 .populate({
                     path: 'room_match_detail'
                 });
 
-            if (result.room_match_detail.length < result.max_player && result.room_match_detail.length == 1) {
-                throw new Error("Pemain kurang dari maksimal player");
-                //kayaknya hapus room_match karena engga ada player di room
-            }
+            if (result.room_match_detail.length == 0) {
+                res.status(200).json({ message: "Pemain tidak ditemukan di room, tidak ada proses hapus", status: true })
+                }
 
-            let confirmDataPlayer = result.room_match_detail.filter((e) => {
-                return e.player_id == req.user._id ? e : null
-            });
+            let confirmDataPlayer = result.room_match_detail.find((e) => e.player_id.toString() == req.user._id.toString());
+           
 
-
-            if (confirmDataPlayer == null) {
-                throw new Error("Pemain tidak ditemukan di room");
+            if (confirmDataPlayer.length == 0 || confirmDataPlayer == undefined) {
+                res.status(200).json({ message: "Pemain tidak ditemukan di room, tidak ada proses hapus", status: true })
             }
             let roomDetailArr = result.room_match_detail;
             roomDetailArr.splice(roomDetailArr.findIndex(v => v._id == confirmDataPlayer._id),1);
@@ -411,7 +476,7 @@ module.exports = {
             res.status(200).json({ message: "success cancel", status: true })
 
         } catch (err) {
-            res.status(500).json({ message: err.message || `Internal server error` })
+            res.status(500).json({ message: err.message || `Internal server error`, status: false })
         }
     },
 
@@ -435,32 +500,22 @@ module.exports = {
             let words;
             switch (language.language_collection) {
                 case 'indonesia_words': 
-                    var count = await LanguageWords.IndonesiaWords.count();
-                    var rand = Math.floor(Math.random() * count);
                     words = await LanguageWords.IndonesiaWords.find({ length_word: length_w });
                     break;
 
                 case 'jawa_words':
-                    var count = await LanguageWords.JawaWords.count();
-                    var rand = Math.floor(Math.random() * count);
                     words = await LanguageWords.JawaWords.find({ length_word: length_w });
                     break;
 
                 case 'bali_words':
-                    var count = await LanguageWords.BaliWords.count();
-                    var rand = Math.floor(Math.random() * count);
                     words = await LanguageWords.BaliWords.find({ length_word: length_w });
                     break;
 
                 case 'english_words':
-                    var count = await LanguageWords.EnglishWords.count();
-                    var rand = Math.floor(Math.random() * count);
                     words = await LanguageWords.EnglishWords.find({ length_word: length_w });
                     break;
 
                 default:
-                    var count = await LanguageWords.BaliWords.count();
-                    var rand = Math.floor(Math.random() * count);
                     words = await LanguageWords.EnglishWords.find({ length_word: length_w });
                     break;
             }
@@ -469,10 +524,61 @@ module.exports = {
             words = words.slice(0, limit);
 
             // socketapi.io.to(req.query.channel_code).emit('broadcast-question', JSON.stringify({ question: words, language_name: language.language_name, status: true }));
-
-            res.status(200).json({data:words, status:true})
+            
+            res.status(200).json({data:words, status:true, encyrpt:false})
         } catch (err) {
             res.status(500).json({ message: err.message || `Internal server error`, status: false})
+        }
+    },
+
+    /**
+     * 
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     * 
+     * input
+     * language_code => string
+     * question_num => int
+     * channel_code => string
+     * length_word => int
+     */
+    getQuestionRelated: async (req, res, next) => {
+        try {
+            const language = await Language.findOne({ language_code: req.query.language_code });
+            const limit = req.query.question_num ?? 10;
+            const length_w = req.query.length_word ?? 3;
+            console.log(req.query)
+            let words;
+            switch (language.language_collection) {
+                case 'indonesia_words':
+                    words = await DictWord.find({ length_word: length_w, language_id:1 });
+                    break;
+
+                case 'jawa_words':
+                    words = await DictWord.find({ length_word: length_w, language_id:4 });
+                    break;
+
+                case 'bali_words':
+                    words = await DictWord.find({ length_word: length_w, language_id: 3 });
+                    break;
+
+                case 'english_words':
+                    words = await DictWord.find({ length_word: length_w, language_id: 2 });
+                    break;
+
+                default:
+                    words = await DictWord.find({ length_word: length_w, language_id: 2 });
+                    break;
+            }
+
+            words = suffleWords(words);
+            words = words.slice(0, limit);
+
+
+            res.status(200).json({ data: words, status: true, encyrpt: false });
+        } catch (err) {
+            res.status(500).json({ message: err.message || `Internal server error`, status: false })
         }
     },
 
@@ -510,7 +616,7 @@ module.exports = {
      */
     getResultMatch: async(req, res, next) =>{
         try {
-            let result = await RoomMatch.findOne({ _id: req.body.room_march_detail_id})
+            let result = await RoomMatch.findOne({ _id: req.body.room_match_id })
                 .populate({
                     path: 'room_match_detail',
                     populate: {
@@ -528,6 +634,32 @@ module.exports = {
         }
     },
 
+    testSchedule: async(req, res, next) =>{
+
+        const datetime_client = new Date(req.body.datetime_client);
+        const datetime_target = new Date(req.body.datetime_target);
+        console.log("dari datetime_client |" + datetime_client);
+        console.log("dari datetime_target |" + datetime_target);
+        
+        var diff = datetime_target - datetime_client;
+
+        console.log(diff);
+        var text = 'this';
+
+        // let now = new Date('2022-05-21T10:36:00.000z');
+        now = new Date(new Date().getTime() + diff);
+        // console.log(now);
+        // const date = timeZone(now, "Asia/Makassar");
+        // console.log(date);
+        // await schedule.testSchedule("wow",date)
+        // await schedule.completeStartGame("data", date);
+        await schedule.runGameSchedule(() => {
+            socketapi.io.emit('starting-game-by-schedule', JSON.stringify({ data: 'onTes', target: 'starting-game-by-schedule' }));
+        }, now);
+
+        
+        res.status(200).json({ data: "berhasil", status: true });
+    }
     
 
     
